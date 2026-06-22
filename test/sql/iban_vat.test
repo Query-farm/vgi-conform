@@ -1,0 +1,68 @@
+# name: test/sql/iban_vat.test
+# description: IBAN and VAT validation / formatting (incl. country overloads)
+# group: [vgi_conform]
+
+require-env VGI_CONFORM_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'conform' AS conform (TYPE vgi, LOCATION '${VGI_CONFORM_WORKER}');
+
+# ---- IBAN ----
+
+query I
+SELECT conform.is_valid_iban('GB82 WEST 1234 5698 7654 32');
+----
+true
+
+# A bad checksum is rejected.
+query I
+SELECT conform.is_valid_iban('GB00WEST12345698765432');
+----
+false
+
+query I
+SELECT conform.format_iban('GB82WEST12345698765432');
+----
+GB82 WEST 1234 5698 7654 32
+
+query I
+SELECT conform.iban_country('GB82WEST12345698765432');
+----
+GB
+
+# format_iban is NULL for an invalid IBAN.
+query I
+SELECT conform.format_iban('not an iban') IS NULL;
+----
+true
+
+# ---- VAT ----
+
+# Default form validates the EU country-prefixed number.
+query I
+SELECT conform.is_valid_vat('DE136695976');
+----
+true
+
+query I
+SELECT conform.format_vat('DE 136 695 976');
+----
+DE136695976
+
+# A non-EU number is not a valid EU VAT.
+query I
+SELECT conform.is_valid_vat('US123456789');
+----
+false
+
+# Country overload validates the unprefixed national number.
+query I
+SELECT conform.is_valid_vat('136695976', 'DE');
+----
+true
+
+statement ok
+DETACH conform;

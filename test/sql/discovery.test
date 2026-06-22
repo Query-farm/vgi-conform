@@ -1,0 +1,54 @@
+# name: test/sql/discovery.test
+# description: Discovery table functions (supported_phone_regions, card_brands)
+# group: [vgi_conform]
+
+require-env VGI_CONFORM_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'conform' AS conform (TYPE vgi, LOCATION '${VGI_CONFORM_WORKER}');
+
+# ---- supported_phone_regions() ----
+
+query I
+SELECT count(*) > 100 FROM conform.supported_phone_regions();
+----
+true
+
+query I
+SELECT country_code FROM conform.supported_phone_regions() WHERE region = 'US';
+----
+1
+
+query I
+SELECT country_code FROM conform.supported_phone_regions() WHERE region = 'GB';
+----
+44
+
+# ---- card_brands() ----
+
+query I
+SELECT count(*) FROM conform.card_brands();
+----
+6
+
+query I rowsort
+SELECT brand FROM conform.card_brands();
+----
+amex
+diners
+discover
+jcb
+mastercard
+visa
+
+# card_brand only ever returns a brand listed by card_brands().
+query I
+SELECT conform.card_brand('5555555555554444') IN (SELECT brand FROM conform.card_brands());
+----
+true
+
+statement ok
+DETACH conform;

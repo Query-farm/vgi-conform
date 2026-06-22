@@ -1,0 +1,74 @@
+# name: test/sql/phone.test
+# description: Phone validation + formatting with region arity overloads
+# group: [vgi_conform]
+
+require-env VGI_CONFORM_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'conform' AS conform (TYPE vgi, LOCATION '${VGI_CONFORM_WORKER}');
+
+# Default region is 'US'.
+query I
+SELECT conform.is_valid_phone('202-456-1111');
+----
+true
+
+query I
+SELECT conform.format_phone_e164('202-456-1111');
+----
++12024561111
+
+query I
+SELECT conform.format_phone_national('2024561111');
+----
+(202) 456-1111
+
+query I
+SELECT conform.format_phone_international('202-456-1111');
+----
++1 202-456-1111
+
+# Region overload.
+query I
+SELECT conform.is_valid_phone('07911 123456', 'GB');
+----
+true
+
+query I
+SELECT conform.format_phone_e164('07911 123456', 'GB');
+----
++447911123456
+
+query I
+SELECT conform.phone_type('07911 123456', 'GB');
+----
+mobile
+
+# A UK mobile parsed as US is invalid -> false / NULL (never an error).
+query I
+SELECT conform.is_valid_phone('07911 123456', 'US');
+----
+false
+
+query I
+SELECT conform.format_phone_e164('07911 123456', 'US') IS NULL;
+----
+true
+
+# Garbage never raises.
+query I
+SELECT conform.is_valid_phone('not a phone');
+----
+false
+
+# NULL passthrough.
+query I
+SELECT conform.format_phone_e164(NULL) IS NULL;
+----
+true
+
+statement ok
+DETACH conform;

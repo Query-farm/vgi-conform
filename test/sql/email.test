@@ -1,0 +1,55 @@
+# name: test/sql/email.test
+# description: Email validation, normalization, and domain extraction
+# group: [vgi_conform]
+
+require-env VGI_CONFORM_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'conform' AS conform (TYPE vgi, LOCATION '${VGI_CONFORM_WORKER}');
+
+query I
+SELECT conform.is_valid_email('a@b.com');
+----
+true
+
+query I
+SELECT conform.is_valid_email('not-an-email');
+----
+false
+
+# NULL input -> NULL output.
+query I
+SELECT conform.is_valid_email(NULL) IS NULL;
+----
+true
+
+query I
+SELECT conform.normalize_email('Test@Example.COM');
+----
+Test@example.com
+
+# normalize_email is NULL for invalid input.
+query I
+SELECT conform.normalize_email('nope') IS NULL;
+----
+true
+
+query I
+SELECT conform.email_domain('a@Example.com');
+----
+example.com
+
+# Per-row use over a small VALUES table.
+query II rowsort
+SELECT e, conform.is_valid_email(e)
+FROM (VALUES ('a@b.com'), ('bad'), ('x@y.org')) AS t(e);
+----
+a@b.com	true
+bad	false
+x@y.org	true
+
+statement ok
+DETACH conform;

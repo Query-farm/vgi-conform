@@ -1,0 +1,104 @@
+# name: test/sql/card_url_postal.test
+# description: Credit-card, URL, and postal-code validation / normalization
+# group: [vgi_conform]
+
+require-env VGI_CONFORM_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'conform' AS conform (TYPE vgi, LOCATION '${VGI_CONFORM_WORKER}');
+
+# ---- Credit card ----
+
+query I
+SELECT conform.is_valid_card('4111 1111 1111 1111');
+----
+true
+
+# Luhn failure.
+query I
+SELECT conform.is_valid_card('4111 1111 1111 1112');
+----
+false
+
+query I
+SELECT conform.card_brand('4111111111111111');
+----
+visa
+
+query I
+SELECT conform.card_brand('378282246310005');
+----
+amex
+
+# Unrecognized brand -> NULL.
+query I
+SELECT conform.card_brand('1234567812345670') IS NULL;
+----
+true
+
+query I
+SELECT conform.mask_card('4111-1111-1111-1111');
+----
+************1111
+
+# ---- URL ----
+
+query I
+SELECT conform.is_valid_url('https://example.com/path');
+----
+true
+
+# No scheme -> not an absolute URL.
+query I
+SELECT conform.is_valid_url('example.com');
+----
+false
+
+query I
+SELECT conform.normalize_url('HTTP://Example.com:80/Path');
+----
+http://example.com/Path
+
+query I
+SELECT conform.url_host('https://WWW.Example.com/a');
+----
+www.example.com
+
+# normalize_url is NULL for invalid input.
+query I
+SELECT conform.normalize_url('not a url') IS NULL;
+----
+true
+
+# ---- Postal ----
+
+query I
+SELECT conform.is_valid_postal_code('90210', 'US');
+----
+true
+
+query I
+SELECT conform.is_valid_postal_code('9021', 'US');
+----
+false
+
+query I
+SELECT conform.is_valid_postal_code('K1A 0B1', 'CA');
+----
+true
+
+query I
+SELECT conform.is_valid_postal_code('SW1A 1AA', 'GB');
+----
+true
+
+# An unknown country raises rather than silently returning false.
+statement error
+SELECT conform.is_valid_postal_code('90210', 'ZZ');
+----
+
+statement ok
+DETACH conform;
