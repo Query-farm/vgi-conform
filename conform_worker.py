@@ -1,14 +1,11 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "vgi-python",
+#     "vgi-python>=0.8.3",
 #     "phonenumbers>=8.13",
 #     "python-stdnum>=1.20",
 #     "email-validator>=2.1",
 # ]
-#
-# [tool.uv.sources]
-# vgi-python = { path = "../vgi-python" }
 # ///
 """VGI worker exposing field validation + normalization to SQL.
 
