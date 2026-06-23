@@ -30,7 +30,7 @@ Backends:
 from __future__ import annotations
 
 import re
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import SplitResult, urlsplit, urlunsplit
 
 import phonenumbers
 from email_validator import EmailNotValidError, validate_email
@@ -96,8 +96,10 @@ _PHONE_TYPE_NAMES: dict[int, str] = {
 
 
 def _parse_phone(text: str, region: str) -> phonenumbers.PhoneNumber | None:
-    """Parse + validate ``text`` in ``region``; ``None`` if it cannot be parsed
-    or is not a valid number. Never raises."""
+    """Parse and validate ``text`` in ``region``.
+
+    Returns ``None`` if it cannot be parsed or is not a valid number. Never raises.
+    """
     try:
         number = phonenumbers.parse(text, region.upper())
     except NumberParseException:
@@ -222,11 +224,11 @@ def format_vat(text: str, country: str | None = None) -> str | None:
     if not is_valid_vat(text, country):
         return None
     if country is None:
-        return _eu_vat.compact(text)
+        return str(_eu_vat.compact(text))
     module = _country_vat_module(country)
     if module is None:
-        return _eu_vat.compact(text)
-    return module.compact(text)
+        return str(_eu_vat.compact(text))
+    return str(module.compact(text))
 
 
 # ---------------------------------------------------------------------------
@@ -251,11 +253,12 @@ def is_valid_card(text: str) -> bool:
 
 # Brand detection by IIN/BIN prefix + accepted lengths. Pure code, no library.
 def card_brand(text: str) -> str | None:
-    """The card brand for ``text`` (``visa`` / ``mastercard`` / ``amex`` /
-    ``discover`` / ``diners`` / ``jcb``), or ``None`` if it matches none.
+    """The card brand for ``text``, or ``None`` if it matches none.
 
-    Detection is by prefix + length only; it does **not** require a passing Luhn
-    checksum (use :func:`is_valid_card` for that). NULL/garbage -> ``None``.
+    Recognized brands: ``visa`` / ``mastercard`` / ``amex`` / ``discover`` /
+    ``diners`` / ``jcb``. Detection is by prefix + length only; it does **not**
+    require a passing Luhn checksum (use :func:`is_valid_card` for that).
+    NULL/garbage -> ``None``.
     """
     d = _card_digits(text)
     n = len(d)
@@ -315,9 +318,11 @@ def card_brands() -> list[str]:
 _DEFAULT_PORTS = {"http": 80, "https": 443, "ftp": 21, "ws": 80, "wss": 443}
 
 
-def _split_url(text: str):  # type: ignore[no-untyped-def]
-    """Parse + sanity-check a URL; ``None`` unless it has an http(s)-style
-    scheme *and* a host. Never raises."""
+def _split_url(text: str) -> SplitResult | None:
+    """Parse and sanity-check a URL.
+
+    Returns ``None`` unless it has an http(s)-style scheme *and* a host. Never raises.
+    """
     try:
         parts = urlsplit(text)
     except ValueError:
@@ -405,7 +410,6 @@ def is_valid_postal_code(text: str, country: str) -> bool:
     pattern = _POSTAL_PATTERNS.get(cc)
     if pattern is None:
         raise ValueError(
-            f"unsupported postal-code country {country!r}; "
-            f"supported: {', '.join(supported_postal_countries())}"
+            f"unsupported postal-code country {country!r}; supported: {', '.join(supported_postal_countries())}"
         )
     return pattern.match(text.strip().upper()) is not None

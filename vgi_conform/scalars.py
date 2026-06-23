@@ -69,6 +69,8 @@ class IsValidEmailFunction(ScalarFunction):
     """``is_valid_email(text)`` -- True if syntactically valid (no DNS check)."""
 
     class Meta:
+        """Function metadata."""
+
         name = "is_valid_email"
         description = "True if text is a syntactically valid email address (no DNS lookup)"
         categories = ["conform", "email"]
@@ -80,6 +82,7 @@ class IsValidEmailFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Email address to validate.")]
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_bool(text, validators.is_valid_email)
 
 
@@ -87,6 +90,8 @@ class NormalizeEmailFunction(ScalarFunction):
     """``normalize_email(text)`` -- normalized email, or NULL if invalid."""
 
     class Meta:
+        """Function metadata."""
+
         name = "normalize_email"
         description = "Normalized email address (lower-cased domain, etc.), or NULL if invalid"
         categories = ["conform", "email"]
@@ -101,6 +106,7 @@ class NormalizeEmailFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Email address to normalize.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, validators.normalize_email)
 
 
@@ -108,6 +114,8 @@ class EmailDomainFunction(ScalarFunction):
     """``email_domain(text)`` -- the domain part, or NULL if invalid."""
 
     class Meta:
+        """Function metadata."""
+
         name = "email_domain"
         description = "The (normalized) domain part of an email address, or NULL if invalid"
         categories = ["conform", "email"]
@@ -122,6 +130,7 @@ class EmailDomainFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Email address.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, validators.email_domain)
 
 
@@ -134,6 +143,8 @@ class IsValidPhoneFunction(ScalarFunction):
     """``is_valid_phone(text)`` -- valid phone parsed as US."""
 
     class Meta:
+        """Function metadata."""
+
         name = "is_valid_phone"
         description = "True if text is a valid phone number (region defaults to 'US')"
         categories = ["conform", "phone"]
@@ -148,6 +159,7 @@ class IsValidPhoneFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Phone number to validate.")]
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_bool(text, lambda x: validators.is_valid_phone(x, _DEFAULT_REGION))
 
 
@@ -155,6 +167,8 @@ class IsValidPhoneRegionFunction(ScalarFunction):
     """``is_valid_phone(text, region)`` -- valid phone parsed as ``region``."""
 
     class Meta:
+        """Function metadata."""
+
         name = "is_valid_phone"
         description = "True if text is a valid phone number in a given region"
         categories = ["conform", "phone"]
@@ -171,6 +185,7 @@ class IsValidPhoneRegionFunction(ScalarFunction):
         text: Annotated[pa.StringArray, Param(doc="Phone number to validate.")],
         region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_bool(text, lambda x: validators.is_valid_phone(x, region))
 
 
@@ -185,6 +200,8 @@ class FormatPhoneE164Function(ScalarFunction):
     """``format_phone_e164(text)`` -- E.164 form, region defaults to 'US'."""
 
     class Meta:
+        """Function metadata."""
+
         name = "format_phone_e164"
         description = "Format a phone number as E.164, e.g. '+12024561111' (region defaults to 'US')"
         categories = ["conform", "phone"]
@@ -199,6 +216,7 @@ class FormatPhoneE164Function(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Phone number.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_phone_e164(x, _DEFAULT_REGION))
 
 
@@ -206,6 +224,8 @@ class FormatPhoneE164RegionFunction(ScalarFunction):
     """``format_phone_e164(text, region)`` -- E.164 form in ``region``."""
 
     class Meta:
+        """Function metadata."""
+
         name = "format_phone_e164"
         description = "Format a phone number as E.164 in a given region (NULL if invalid)"
         categories = ["conform", "phone"]
@@ -222,6 +242,7 @@ class FormatPhoneE164RegionFunction(ScalarFunction):
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
         region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_phone_e164(x, region))
 
 
@@ -229,6 +250,8 @@ class FormatPhoneNationalFunction(ScalarFunction):
     """``format_phone_national(text)`` -- national form, region defaults to 'US'."""
 
     class Meta:
+        """Function metadata."""
+
         name = "format_phone_national"
         description = "Format a phone number in national form, e.g. '(202) 456-1111' (region 'US')"
         categories = ["conform", "phone"]
@@ -243,6 +266,7 @@ class FormatPhoneNationalFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Phone number.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_phone_national(x, _DEFAULT_REGION))
 
 
@@ -250,6 +274,8 @@ class FormatPhoneNationalRegionFunction(ScalarFunction):
     """``format_phone_national(text, region)`` -- national form in ``region``."""
 
     class Meta:
+        """Function metadata."""
+
         name = "format_phone_national"
         description = "Format a phone number in national form in a given region (NULL if invalid)"
         categories = ["conform", "phone"]
@@ -266,6 +292,7 @@ class FormatPhoneNationalRegionFunction(ScalarFunction):
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
         region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_phone_national(x, region))
 
 
@@ -273,6 +300,8 @@ class FormatPhoneInternationalFunction(ScalarFunction):
     """``format_phone_international(text)`` -- international form, region 'US'."""
 
     class Meta:
+        """Function metadata."""
+
         name = "format_phone_international"
         description = "Format a phone number in international form, e.g. '+1 202-456-1111' (region 'US')"
         categories = ["conform", "phone"]
@@ -287,6 +316,7 @@ class FormatPhoneInternationalFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Phone number.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_phone_international(x, _DEFAULT_REGION))
 
 
@@ -294,6 +324,8 @@ class FormatPhoneInternationalRegionFunction(ScalarFunction):
     """``format_phone_international(text, region)`` -- international form in ``region``."""
 
     class Meta:
+        """Function metadata."""
+
         name = "format_phone_international"
         description = "Format a phone number in international form in a given region (NULL if invalid)"
         categories = ["conform", "phone"]
@@ -310,6 +342,7 @@ class FormatPhoneInternationalRegionFunction(ScalarFunction):
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
         region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_phone_international(x, region))
 
 
@@ -317,6 +350,8 @@ class PhoneRegionFunction(ScalarFunction):
     """``phone_region(text)`` -- region the number belongs to, parsed as 'US'."""
 
     class Meta:
+        """Function metadata."""
+
         name = "phone_region"
         description = "The ISO region a phone number belongs to (parse region defaults to 'US')"
         categories = ["conform", "phone"]
@@ -331,6 +366,7 @@ class PhoneRegionFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Phone number.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.phone_region(x, _DEFAULT_REGION))
 
 
@@ -338,6 +374,8 @@ class PhoneRegionRegionFunction(ScalarFunction):
     """``phone_region(text, region)`` -- region the number belongs to."""
 
     class Meta:
+        """Function metadata."""
+
         name = "phone_region"
         description = "The ISO region a phone number belongs to, parsing in a given region (NULL if invalid)"
         categories = ["conform", "phone"]
@@ -354,6 +392,7 @@ class PhoneRegionRegionFunction(ScalarFunction):
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
         region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.phone_region(x, region))
 
 
@@ -361,6 +400,8 @@ class PhoneTypeFunction(ScalarFunction):
     """``phone_type(text)`` -- line type, parsed as 'US'."""
 
     class Meta:
+        """Function metadata."""
+
         name = "phone_type"
         description = "Line type of a phone number, e.g. 'mobile'/'fixed_line' (parse region 'US')"
         categories = ["conform", "phone"]
@@ -375,6 +416,7 @@ class PhoneTypeFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Phone number.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.phone_type(x, _DEFAULT_REGION))
 
 
@@ -382,6 +424,8 @@ class PhoneTypeRegionFunction(ScalarFunction):
     """``phone_type(text, region)`` -- line type, parsed in ``region``."""
 
     class Meta:
+        """Function metadata."""
+
         name = "phone_type"
         description = "Line type of a phone number, parsing in a given region (NULL if invalid)"
         categories = ["conform", "phone"]
@@ -398,6 +442,7 @@ class PhoneTypeRegionFunction(ScalarFunction):
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
         region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.phone_type(x, region))
 
 
@@ -410,6 +455,8 @@ class IsValidIbanFunction(ScalarFunction):
     """``is_valid_iban(text)`` -- True if a structurally valid IBAN."""
 
     class Meta:
+        """Function metadata."""
+
         name = "is_valid_iban"
         description = "True if text is a structurally valid IBAN (checksum included)"
         categories = ["conform", "iban"]
@@ -424,6 +471,7 @@ class IsValidIbanFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="IBAN to validate.")]
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_bool(text, validators.is_valid_iban)
 
 
@@ -431,6 +479,8 @@ class FormatIbanFunction(ScalarFunction):
     """``format_iban(text)`` -- IBAN grouped into 4s, or NULL if invalid."""
 
     class Meta:
+        """Function metadata."""
+
         name = "format_iban"
         description = "IBAN grouped into space-separated blocks of four, or NULL if invalid"
         categories = ["conform", "iban"]
@@ -445,6 +495,7 @@ class FormatIbanFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="IBAN to format.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, validators.format_iban)
 
 
@@ -452,6 +503,8 @@ class IbanCountryFunction(ScalarFunction):
     """``iban_country(text)`` -- the IBAN's country code, or NULL if invalid."""
 
     class Meta:
+        """Function metadata."""
+
         name = "iban_country"
         description = "Two-letter country code of a valid IBAN, or NULL if invalid"
         categories = ["conform", "iban"]
@@ -463,9 +516,8 @@ class IbanCountryFunction(ScalarFunction):
         ]
 
     @classmethod
-    def compute(
-        cls, text: Annotated[pa.StringArray, Param(doc="IBAN.")]
-    ) -> Annotated[pa.StringArray, Returns()]:
+    def compute(cls, text: Annotated[pa.StringArray, Param(doc="IBAN.")]) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, validators.iban_country)
 
 
@@ -478,6 +530,8 @@ class IsValidVatFunction(ScalarFunction):
     """``is_valid_vat(text)`` -- valid EU-prefixed VAT number."""
 
     class Meta:
+        """Function metadata."""
+
         name = "is_valid_vat"
         description = "True if text is a valid EU VAT number (country-prefixed, e.g. 'DE136695976')"
         categories = ["conform", "vat"]
@@ -492,6 +546,7 @@ class IsValidVatFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="VAT number (country-prefixed).")]
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_bool(text, lambda x: validators.is_valid_vat(x, None))
 
 
@@ -499,6 +554,8 @@ class IsValidVatCountryFunction(ScalarFunction):
     """``is_valid_vat(text, country)`` -- valid national VAT for ``country``."""
 
     class Meta:
+        """Function metadata."""
+
         name = "is_valid_vat"
         description = "True if text is a valid VAT number for a country (national, unprefixed form)"
         categories = ["conform", "vat"]
@@ -515,6 +572,7 @@ class IsValidVatCountryFunction(ScalarFunction):
         text: Annotated[pa.StringArray, Param(doc="VAT number (national form).")],
         country: Annotated[str, ConstParam("ISO-3166 alpha-2 country code, e.g. 'DE', 'FR'.")],
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_bool(text, lambda x: validators.is_valid_vat(x, country))
 
 
@@ -522,6 +580,8 @@ class FormatVatFunction(ScalarFunction):
     """``format_vat(text)`` -- compact EU VAT number, or NULL if invalid."""
 
     class Meta:
+        """Function metadata."""
+
         name = "format_vat"
         description = "Compact (stripped, upper-cased) EU VAT number, or NULL if invalid"
         categories = ["conform", "vat"]
@@ -533,9 +593,8 @@ class FormatVatFunction(ScalarFunction):
         ]
 
     @classmethod
-    def compute(
-        cls, text: Annotated[pa.StringArray, Param(doc="VAT number.")]
-    ) -> Annotated[pa.StringArray, Returns()]:
+    def compute(cls, text: Annotated[pa.StringArray, Param(doc="VAT number.")]) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_vat(x, None))
 
 
@@ -543,6 +602,8 @@ class FormatVatCountryFunction(ScalarFunction):
     """``format_vat(text, country)`` -- compact national VAT, or NULL."""
 
     class Meta:
+        """Function metadata."""
+
         name = "format_vat"
         description = "Compact VAT number for a country (national form), or NULL if invalid"
         categories = ["conform", "vat"]
@@ -559,6 +620,7 @@ class FormatVatCountryFunction(ScalarFunction):
         text: Annotated[pa.StringArray, Param(doc="VAT number (national form).")],
         country: Annotated[str, ConstParam("ISO-3166 alpha-2 country code, e.g. 'DE', 'FR'.")],
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_vat(x, country))
 
 
@@ -571,6 +633,8 @@ class IsValidCardFunction(ScalarFunction):
     """``is_valid_card(text)`` -- True if the digits pass the Luhn checksum."""
 
     class Meta:
+        """Function metadata."""
+
         name = "is_valid_card"
         description = "True if the card number's digits pass the Luhn checksum"
         categories = ["conform", "card"]
@@ -585,6 +649,7 @@ class IsValidCardFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Card number to validate.")]
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_bool(text, validators.is_valid_card)
 
 
@@ -592,6 +657,8 @@ class CardBrandFunction(ScalarFunction):
     """``card_brand(text)`` -- the card brand, or NULL if unrecognized."""
 
     class Meta:
+        """Function metadata."""
+
         name = "card_brand"
         description = "Card brand (visa/mastercard/amex/discover/diners/jcb) by prefix+length, or NULL"
         categories = ["conform", "card"]
@@ -606,6 +673,7 @@ class CardBrandFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Card number.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, validators.card_brand)
 
 
@@ -613,6 +681,8 @@ class MaskCardFunction(ScalarFunction):
     """``mask_card(text)`` -- keep the last 4 digits, mask the rest."""
 
     class Meta:
+        """Function metadata."""
+
         name = "mask_card"
         description = "Mask all but the last four digits, e.g. '************1234' (NULL if <4 digits)"
         categories = ["conform", "card"]
@@ -627,6 +697,7 @@ class MaskCardFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="Card number to mask.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, validators.mask_card)
 
 
@@ -639,6 +710,8 @@ class IsValidUrlFunction(ScalarFunction):
     """``is_valid_url(text)`` -- True if an absolute URL with scheme + host."""
 
     class Meta:
+        """Function metadata."""
+
         name = "is_valid_url"
         description = "True if text is an absolute URL with a scheme and host"
         categories = ["conform", "url"]
@@ -653,6 +726,7 @@ class IsValidUrlFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="URL to validate.")]
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_bool(text, validators.is_valid_url)
 
 
@@ -660,6 +734,8 @@ class NormalizeUrlFunction(ScalarFunction):
     """``normalize_url(text)`` -- lower-case scheme/host, drop default port."""
 
     class Meta:
+        """Function metadata."""
+
         name = "normalize_url"
         description = "Lower-case scheme + host and strip a default port, or NULL if invalid"
         categories = ["conform", "url"]
@@ -674,6 +750,7 @@ class NormalizeUrlFunction(ScalarFunction):
     def compute(
         cls, text: Annotated[pa.StringArray, Param(doc="URL to normalize.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, validators.normalize_url)
 
 
@@ -681,6 +758,8 @@ class UrlHostFunction(ScalarFunction):
     """``url_host(text)`` -- the lower-cased host, or NULL if invalid."""
 
     class Meta:
+        """Function metadata."""
+
         name = "url_host"
         description = "Lower-cased host of a valid URL, or NULL if invalid"
         categories = ["conform", "url"]
@@ -692,9 +771,8 @@ class UrlHostFunction(ScalarFunction):
         ]
 
     @classmethod
-    def compute(
-        cls, text: Annotated[pa.StringArray, Param(doc="URL.")]
-    ) -> Annotated[pa.StringArray, Returns()]:
+    def compute(cls, text: Annotated[pa.StringArray, Param(doc="URL.")]) -> Annotated[pa.StringArray, Returns()]:
+        """Map each input row to its output value."""
         return _map_str(text, validators.url_host)
 
 
@@ -707,6 +785,8 @@ class IsValidPostalCodeFunction(ScalarFunction):
     """``is_valid_postal_code(text, country)`` -- format check for ~10 countries."""
 
     class Meta:
+        """Function metadata."""
+
         name = "is_valid_postal_code"
         description = (
             "True if text matches a country's postal-code format "
@@ -731,6 +811,7 @@ class IsValidPostalCodeFunction(ScalarFunction):
         text: Annotated[pa.StringArray, Param(doc="Postal code to validate.")],
         country: Annotated[str, ConstParam("ISO-3166 alpha-2 country code, e.g. 'US', 'CA'.")],
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map each input row to its output value."""
         # validators.is_valid_postal_code raises ValueError for unknown country;
         # raising here surfaces a clear DuckDB error (documented behaviour).
         return _map_bool(text, lambda x: validators.is_valid_postal_code(x, country))

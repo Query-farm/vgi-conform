@@ -57,6 +57,8 @@ class SupportedPhoneRegionsFunction(TableFunctionGenerator[_NoArgs]):
     FIXED_SCHEMA: ClassVar[pa.Schema] = _PHONE_REGIONS_SCHEMA
 
     class Meta:
+        """Function metadata."""
+
         name = "supported_phone_regions"
         description = "Every (region, country_code) the phone functions support"
         categories = ["conform", "phone"]
@@ -73,10 +75,12 @@ class SupportedPhoneRegionsFunction(TableFunctionGenerator[_NoArgs]):
 
     @classmethod
     def cardinality(cls, params: BindParams[_NoArgs]) -> TableCardinality:
+        """Estimated and maximum row count for the planner."""
         return TableCardinality(estimate=250, max=1000)
 
     @classmethod
     def process(cls, params: ProcessParams[_NoArgs], state: None, out: OutputCollector) -> None:
+        """Emit one batch of discovery rows."""
         rows = validators.supported_phone_regions()
         out.emit(
             pa.RecordBatch.from_pydict(
@@ -90,9 +94,7 @@ class SupportedPhoneRegionsFunction(TableFunctionGenerator[_NoArgs]):
         out.finish()
 
 
-_CARD_BRANDS_SCHEMA = pa.schema(
-    [field("brand", pa.string(), "A brand card_brand() can return.", nullable=False)]
-)
+_CARD_BRANDS_SCHEMA = pa.schema([field("brand", pa.string(), "A brand card_brand() can return.", nullable=False)])
 
 
 @init_single_worker
@@ -103,6 +105,8 @@ class CardBrandsFunction(TableFunctionGenerator[_NoArgs]):
     FIXED_SCHEMA: ClassVar[pa.Schema] = _CARD_BRANDS_SCHEMA
 
     class Meta:
+        """Function metadata."""
+
         name = "card_brands"
         description = "The brands card_brand() can return (visa, mastercard, amex, ...)"
         categories = ["conform", "card"]
@@ -115,10 +119,12 @@ class CardBrandsFunction(TableFunctionGenerator[_NoArgs]):
 
     @classmethod
     def cardinality(cls, params: BindParams[_NoArgs]) -> TableCardinality:
+        """Estimated and maximum row count for the planner."""
         return TableCardinality(estimate=6, max=6)
 
     @classmethod
     def process(cls, params: ProcessParams[_NoArgs], state: None, out: OutputCollector) -> None:
+        """Emit one batch of discovery rows."""
         out.emit(
             pa.RecordBatch.from_pydict(
                 {"brand": validators.card_brands()},

@@ -61,9 +61,7 @@ class TestPhone:
 
     def test_region_overload(self, client: Client) -> None:
         assert _scalar(client, "is_valid_phone", ["07911 123456"], positional=[pa.scalar("GB")]) == [True]
-        assert _scalar(client, "format_phone_e164", ["07911 123456"], positional=[pa.scalar("GB")]) == [
-            "+447911123456"
-        ]
+        assert _scalar(client, "format_phone_e164", ["07911 123456"], positional=[pa.scalar("GB")]) == ["+447911123456"]
 
     def test_wrong_region_null(self, client: Client) -> None:
         assert _scalar(client, "format_phone_e164", ["07911 123456"], positional=[pa.scalar("US")]) == [None]
