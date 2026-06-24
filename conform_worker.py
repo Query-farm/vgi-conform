@@ -86,13 +86,30 @@ _SCHEMA_DESCRIPTION_MD = (
     "postal-code fields over Apache Arrow."
 )
 
+_SCHEMA_EXAMPLE_QUERIES = (
+    "SELECT conform.main.is_valid_email('a@b.com');\n"
+    "SELECT conform.main.normalize_email('Test@Example.COM');\n"
+    "SELECT conform.main.format_phone_e164('202-456-1111');\n"
+    "SELECT conform.main.is_valid_iban('GB82 WEST 1234 5698 7654 32');\n"
+    "SELECT conform.main.card_brand('4111111111111111');\n"
+    "SELECT conform.main.mask_card('4111-1111-1111-1111');\n"
+    "SELECT conform.main.is_valid_postal_code('90210', 'US');\n"
+    "SELECT * FROM conform.main.card_brands() ORDER BY brand;"
+)
+
+
 _CONFORM_CATALOG = Catalog(
     name="conform",
     default_schema="main",
     comment="Validate + normalize phone/email/IBAN/VAT/card/URL/postal fields for SQL",
     tags={
-        "vgi.description_llm": _CATALOG_DESCRIPTION_LLM,
-        "vgi.description_md": _CATALOG_DESCRIPTION_MD,
+        "vgi.title": "Field Validation & Normalization (conform)",
+        "vgi.keywords": (
+            "validate, normalize, conform, data cleaning, data quality, email, phone, "
+            "IBAN, VAT, credit card, URL, postal code, standardization"
+        ),
+        "vgi.doc_llm": _CATALOG_DESCRIPTION_LLM,
+        "vgi.doc_md": _CATALOG_DESCRIPTION_MD,
         "vgi.author": "Query.Farm",
         "vgi.copyright": "Copyright 2026 Query Farm LLC - https://query.farm",
         "vgi.license": "MIT",
@@ -105,8 +122,21 @@ _CONFORM_CATALOG = Catalog(
             name="main",
             comment="Field validation, normalization, and discovery functions for the conform catalog",
             tags={
-                "vgi.description_llm": _SCHEMA_DESCRIPTION_LLM,
-                "vgi.description_md": _SCHEMA_DESCRIPTION_MD,
+                "vgi.title": "Conform — main schema",
+                "vgi.keywords": (
+                    "validate, normalize, email, phone, IBAN, VAT, credit card, URL, "
+                    "postal code, is_valid_email, format_phone_e164, mask_card, "
+                    "supported_phone_regions, card_brands, data cleaning"
+                ),
+                # VGI123 classifying tags use BARE keys (not vgi.-namespaced).
+                "domain": "data-quality",
+                "category": "validation-and-normalization",
+                "topic": "contact-banking-payment-fields",
+                "vgi.source_url": "https://github.com/Query-farm/vgi-conform/blob/main/conform_worker.py",
+                "vgi.doc_llm": _SCHEMA_DESCRIPTION_LLM,
+                "vgi.doc_md": _SCHEMA_DESCRIPTION_MD,
+                # VGI506 representative, catalog-qualified example queries.
+                "vgi.example_queries": _SCHEMA_EXAMPLE_QUERIES,
             },
             functions=list(_FUNCTIONS),
         ),

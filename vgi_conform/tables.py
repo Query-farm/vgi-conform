@@ -28,7 +28,10 @@ from vgi.table_function import (
 from vgi_rpc.rpc import OutputCollector
 
 from . import validators
+from .meta import function_tags
 from .schema_utils import field
+
+_TABLES_PATH = "vgi_conform/tables.py"
 
 
 @dataclass(kw_only=True)
@@ -62,14 +65,43 @@ class SupportedPhoneRegionsFunction(TableFunctionGenerator[_NoArgs]):
         name = "supported_phone_regions"
         description = "Every (region, country_code) the phone functions support"
         categories = ["conform", "phone"]
-        tags = {
-            "vgi.columns_md": (
-                "| column | type | description |\n"
-                "| --- | --- | --- |\n"
-                "| `region` | VARCHAR | ISO-3166 alpha-2 region code (the optional `region` argument). |\n"
-                "| `country_code` | INTEGER | International dialling (country calling) code. |\n"
+        tags = function_tags(
+            title="List Supported Phone Regions",
+            description_llm=(
+                "## `supported_phone_regions()`\n\n"
+                "A **table function** (no arguments) returning one row per phone region the "
+                "phone scalars understand, with columns:\n\n"
+                "- `region` (`VARCHAR`) -- the ISO-3166 alpha-2 code you pass as the "
+                "optional `region` argument to `is_valid_phone(text, region)`, the phone "
+                "formatters, `phone_region`, and `phone_type`.\n"
+                "- `country_code` (`INTEGER`) -- its international dialling (country "
+                "calling) code.\n\n"
+                "Use it to discover valid region values or to look up a country's dialling "
+                "code (`SELECT country_code FROM conform.supported_phone_regions() WHERE "
+                "region = 'GB'`)."
             ),
-        }
+            description_md=(
+                "# `supported_phone_regions`\n\n"
+                "Discovery table of every phone region the worker understands.\n\n"
+                "## Usage\n\n"
+                "```sql\n"
+                "SELECT * FROM conform.supported_phone_regions() ORDER BY region;\n"
+                "```\n\n"
+                "## Columns\n\n"
+                "- `region` (VARCHAR) -- ISO-3166 alpha-2 region code.\n"
+                "- `country_code` (INTEGER) -- international dialling code."
+            ),
+            keywords="phone, regions, supported regions, country code, dialling code, discovery",
+            relative_path=_TABLES_PATH,
+            extra={
+                "vgi.result_columns_md": (
+                    "| column | type | description |\n"
+                    "| --- | --- | --- |\n"
+                    "| `region` | VARCHAR | ISO-3166 alpha-2 region code (the optional `region` argument). |\n"
+                    "| `country_code` | INTEGER | International dialling (country calling) code. |\n"
+                ),
+            },
+        )
         examples = [
             FunctionExample(
                 sql="SELECT count(*) FROM conform.supported_phone_regions()",
@@ -118,13 +150,37 @@ class CardBrandsFunction(TableFunctionGenerator[_NoArgs]):
         name = "card_brands"
         description = "The brands card_brand() can return (visa, mastercard, amex, ...)"
         categories = ["conform", "card"]
-        tags = {
-            "vgi.columns_md": (
-                "| column | type | description |\n"
-                "| --- | --- | --- |\n"
-                "| `brand` | VARCHAR | A brand `card_brand()` can return, e.g. `visa`, `mastercard`, `amex`. |\n"
+        tags = function_tags(
+            title="List Recognized Card Brands",
+            description_llm=(
+                "## `card_brands()`\n\n"
+                "A **table function** (no arguments) returning one row per card brand the "
+                "`card_brand` scalar can emit, with a single column:\n\n"
+                "- `brand` (`VARCHAR`) -- a brand name such as `visa`, `mastercard`, "
+                "`amex`, `discover`, `diners`, `jcb`.\n\n"
+                "Use it to enumerate the recognized brands -- e.g. to populate a UI filter "
+                "or to validate that a `card_brand(...)` result is within the known set."
             ),
-        }
+            description_md=(
+                "# `card_brands`\n\n"
+                "Discovery table of every brand `card_brand()` can return.\n\n"
+                "## Usage\n\n"
+                "```sql\n"
+                "SELECT * FROM conform.card_brands() ORDER BY brand;\n"
+                "```\n\n"
+                "## Columns\n\n"
+                "- `brand` (VARCHAR) -- e.g. `visa`, `mastercard`, `amex`."
+            ),
+            keywords="credit card, card brands, visa, mastercard, amex, discover, jcb, discovery",
+            relative_path=_TABLES_PATH,
+            extra={
+                "vgi.result_columns_md": (
+                    "| column | type | description |\n"
+                    "| --- | --- | --- |\n"
+                    "| `brand` | VARCHAR | A brand `card_brand()` can return, e.g. `visa`, `mastercard`, `amex`. |\n"
+                ),
+            },
+        )
         examples = [
             FunctionExample(
                 sql="SELECT * FROM conform.card_brands() ORDER BY brand",
