@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "vgi-python[http]>=0.8.3",
+#     "vgi-python[http]>=0.8.4",
 #     "phonenumbers>=8.13",
 #     "python-stdnum>=1.20",
 #     "email-validator>=2.1",
@@ -47,13 +47,67 @@ _FUNCTIONS: list[type] = [
     *TABLE_FUNCTIONS,
 ]
 
+_CATALOG_DESCRIPTION_LLM = (
+    "Validate and normalize real-world structured-data fields in SQL: email, phone number, IBAN, "
+    "EU VAT number, credit-card number, URL, and postal code. Scalars test validity "
+    "(`is_valid_email`, `is_valid_phone`, `is_valid_iban`, `is_valid_vat`, `is_valid_card`, "
+    "`is_valid_url`, `is_valid_postal_code`), normalize/format values (`normalize_email`, "
+    "`format_phone_e164`/`format_phone_national`/`format_phone_international`, `format_iban`, "
+    "`format_vat`, `normalize_url`, `mask_card`), and extract parts (`email_domain`, "
+    "`phone_region`, `phone_type`, `iban_country`, `card_brand`, `url_host`). Phone and VAT take an "
+    "optional ISO region/country argument ('US' / EU-prefixed by default); postal code requires a "
+    "country. Use for data-cleaning, validation, and standardization of contact, banking, and "
+    "payment fields. Validation is offline and deterministic (no DNS or network)."
+)
+
+_CATALOG_DESCRIPTION_MD = (
+    "# conform\n\n"
+    "Validate **and** normalize real-world structured-data fields for DuckDB via VGI -- email, "
+    "phone, IBAN, EU VAT, credit card, URL, and postal code -- backed by `phonenumbers`, "
+    "`python-stdnum`, and `email-validator`. All validation is offline and deterministic.\n\n"
+    "**Scalars:** `is_valid_email`, `normalize_email`, `email_domain`, `is_valid_phone`, "
+    "`format_phone_e164`, `format_phone_national`, `format_phone_international`, `phone_region`, "
+    "`phone_type`, `is_valid_iban`, `format_iban`, `iban_country`, `is_valid_vat`, `format_vat`, "
+    "`is_valid_card`, `card_brand`, `mask_card`, `is_valid_url`, `normalize_url`, `url_host`, "
+    "`is_valid_postal_code`.\n\n"
+    "**Table functions:** `supported_phone_regions`, `card_brands`.\n\n"
+    "Phone/VAT region and country are arguments; `'US'` / the EU-prefixed form are only defaults. "
+    "See `conform.supported_phone_regions()` and `conform.card_brands()` for coverage."
+)
+
+_SCHEMA_DESCRIPTION_LLM = (
+    "Field validation and normalization functions: validity tests, normalizers/formatters, and "
+    "part extractors for email, phone, IBAN, EU VAT, credit-card, URL, and postal-code values, "
+    "plus discovery tables of supported phone regions and card brands."
+)
+
+_SCHEMA_DESCRIPTION_MD = (
+    "Validation and normalization functions for email, phone, IBAN, VAT, credit-card, URL, and "
+    "postal-code fields over Apache Arrow."
+)
+
 _CONFORM_CATALOG = Catalog(
     name="conform",
     default_schema="main",
+    comment="Validate + normalize phone/email/IBAN/VAT/card/URL/postal fields for SQL",
+    tags={
+        "vgi.description_llm": _CATALOG_DESCRIPTION_LLM,
+        "vgi.description_md": _CATALOG_DESCRIPTION_MD,
+        "vgi.author": "Query.Farm",
+        "vgi.copyright": "Copyright 2026 Query Farm LLC - https://query.farm",
+        "vgi.license": "MIT",
+        "vgi.support_contact": "https://github.com/Query-farm/vgi-conform/issues",
+        "vgi.support_policy_url": "https://github.com/Query-farm/vgi-conform/blob/main/README.md",
+    },
+    source_url="https://github.com/Query-farm/vgi-conform",
     schemas=[
         Schema(
             name="main",
-            comment="Validate + normalize phone/email/IBAN/VAT/card/URL/postal fields for SQL",
+            comment="Field validation, normalization, and discovery functions for the conform catalog",
+            tags={
+                "vgi.description_llm": _SCHEMA_DESCRIPTION_LLM,
+                "vgi.description_md": _SCHEMA_DESCRIPTION_MD,
+            },
             functions=list(_FUNCTIONS),
         ),
     ],

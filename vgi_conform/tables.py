@@ -62,6 +62,14 @@ class SupportedPhoneRegionsFunction(TableFunctionGenerator[_NoArgs]):
         name = "supported_phone_regions"
         description = "Every (region, country_code) the phone functions support"
         categories = ["conform", "phone"]
+        tags = {
+            "vgi.columns_md": (
+                "| column | type | description |\n"
+                "| --- | --- | --- |\n"
+                "| `region` | VARCHAR | ISO-3166 alpha-2 region code (the optional `region` argument). |\n"
+                "| `country_code` | INTEGER | International dialling (country calling) code. |\n"
+            ),
+        }
         examples = [
             FunctionExample(
                 sql="SELECT count(*) FROM conform.supported_phone_regions()",
@@ -110,6 +118,13 @@ class CardBrandsFunction(TableFunctionGenerator[_NoArgs]):
         name = "card_brands"
         description = "The brands card_brand() can return (visa, mastercard, amex, ...)"
         categories = ["conform", "card"]
+        tags = {
+            "vgi.columns_md": (
+                "| column | type | description |\n"
+                "| --- | --- | --- |\n"
+                "| `brand` | VARCHAR | A brand `card_brand()` can return, e.g. `visa`, `mastercard`, `amex`. |\n"
+            ),
+        }
         examples = [
             FunctionExample(
                 sql="SELECT * FROM conform.card_brands() ORDER BY brand",
