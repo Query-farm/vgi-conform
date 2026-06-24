@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "vgi-python>=0.8.3",
+#     "vgi-python[http]>=0.8.3",
 #     "phonenumbers>=8.13",
 #     "python-stdnum>=1.20",
 #     "email-validator>=2.1",
