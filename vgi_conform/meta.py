@@ -11,30 +11,37 @@ small set of discoverability tags, in addition to the catalog/schema tags set in
   audience: what it does, when to use it, inputs/outputs, edge cases.
 - ``vgi.doc_md`` (VGI113)           -- a Markdown narrative for human docs:
   overview + usage + notes.
-- ``vgi.keywords`` (VGI126)         -- comma-separated search terms / synonyms.
-- ``vgi.source_url`` (VGI128)       -- link to the implementing source file.
+- ``vgi.keywords`` (VGI126/VGI138)  -- search terms / synonyms, serialized as a
+  JSON array of strings (``["a", "b"]``), NOT a comma-separated string.
 
-:func:`function_tags` assembles all of these (plus any extra tags, e.g.
+Per-object ``vgi.source_url`` is intentionally **not** emitted: ``source_url`` is
+catalog-level provenance (set once on the catalog via the ``Catalog(source_url=)``
+argument); repeating it on every function/schema is redundant (VGI139).
+
+:func:`function_tags` assembles these (plus any extra tags, e.g.
 ``vgi.result_columns_md`` for table functions) into the ``dict`` a function
 exposes as ``class Meta: tags = ...``.
 """
 
 from __future__ import annotations
 
-_REPO_BLOB = "https://github.com/Query-farm/vgi-conform/blob/main"
+import json
 
 
-def source_url(relative_path: str) -> str:
-    """Build the canonical GitHub blob URL for a source file under the repo root.
+def keywords_json(keywords: str) -> str:
+    """Serialize comma-separated keywords as a JSON array of strings (VGI138).
 
     Args:
-        relative_path: Path relative to the repository root, e.g.
-            ``"vgi_conform/scalars.py"``.
+        keywords: Comma-separated search terms / synonyms, e.g.
+            ``"email, validate email, address check"``.
 
     Returns:
-        The ``https://github.com/Query-farm/vgi-conform/blob/main/<path>`` URL.
+        A JSON array string such as
+        ``'["email", "validate email", "address check"]'``, with each term
+        trimmed and empty entries dropped.
     """
-    return f"{_REPO_BLOB}/{relative_path}"
+    terms = [t.strip() for t in keywords.split(",") if t.strip()]
+    return json.dumps(terms)
 
 
 def function_tags(
@@ -52,20 +59,23 @@ def function_tags(
         title: Human display name (VGI124); must differ from the machine name.
         description_llm: Markdown narrative for an LLM/agent audience (VGI112).
         description_md: Markdown narrative for human docs (VGI113).
-        keywords: Comma-separated search terms / synonyms (VGI126).
-        relative_path: Source file path relative to the repo root (VGI128).
-        extra: Optional additional tags to merge in (e.g. ``vgi.result_columns_md`` or
-            ``vgi.executable_examples``).
+        keywords: Comma-separated search terms / synonyms; emitted as a JSON
+            array of strings under ``vgi.keywords`` (VGI126/VGI138).
+        relative_path: Unused; retained for call-site compatibility. Per-object
+            ``vgi.source_url`` is no longer emitted (VGI139) -- ``source_url`` is
+            set once on the catalog instead.
+        extra: Optional additional tags to merge in (e.g.
+            ``vgi.result_columns_md`` or ``vgi.executable_examples``).
 
     Returns:
         A ``dict[str, str]`` suitable for ``class Meta: tags = ...``.
     """
+    del relative_path  # per-object source_url dropped (VGI139); kept for callers
     tags = {
         "vgi.title": title,
         "vgi.doc_llm": description_llm,
         "vgi.doc_md": description_md,
-        "vgi.keywords": keywords,
-        "vgi.source_url": source_url(relative_path),
+        "vgi.keywords": keywords_json(keywords),
     }
     if extra:
         tags.update(extra)
