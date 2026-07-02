@@ -77,8 +77,7 @@ class SupportedPhoneRegionsFunction(TableFunctionGenerator[_NoArgs]):
                 "- `country_code` (`INTEGER`) -- its international dialling (country "
                 "calling) code.\n\n"
                 "Use it to discover valid region values or to look up a country's dialling "
-                "code (`SELECT country_code FROM conform.supported_phone_regions() WHERE "
-                "region = 'GB'`)."
+                "code (filter by `region` to read one country's `country_code`)."
             ),
             description_md=(
                 "# `supported_phone_regions`\n\n"

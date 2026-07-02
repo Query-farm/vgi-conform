@@ -54,17 +54,32 @@ _FUNCTIONS: list[type] = [
     *TABLE_FUNCTIONS,
 ]
 
+# VGI411: every object in a schema that declares categories must carry a
+# `vgi.category`. Each function's `Meta.categories` second element already names its
+# family (email/phone/iban/vat/card/url/postal); mirror it into the per-object
+# `vgi.category` tag so the schema registry (_CATEGORIES_JSON) and its members stay
+# in lockstep. (The two discovery tables set `vgi.category` inline below.)
+for _fn in _FUNCTIONS:
+    _fn.Meta.tags["vgi.category"] = _fn.Meta.categories[1]  # type: ignore[attr-defined]
+
 _CATALOG_DESCRIPTION_LLM = (
-    "Validate and normalize real-world structured-data fields in SQL: email, phone number, IBAN, "
-    "EU VAT number, credit-card number, URL, and postal code. Scalars test validity "
-    "(`is_valid_email`, `is_valid_phone`, `is_valid_iban`, `is_valid_vat`, `is_valid_card`, "
-    "`is_valid_url`, `is_valid_postal_code`), normalize/format values (`normalize_email`, "
-    "`format_phone_e164`/`format_phone_national`/`format_phone_international`, `format_iban`, "
-    "`format_vat`, `normalize_url`, `mask_card`), and extract parts (`email_domain`, "
-    "`phone_region`, `phone_type`, `iban_country`, `card_brand`, `url_host`). Phone and VAT take an "
-    "optional ISO region/country argument ('US' / EU-prefixed by default); postal code requires a "
-    "country. Use for data-cleaning, validation, and standardization of contact, banking, and "
-    "payment fields. Validation is offline and deterministic (no DNS or network)."
+    "Validate and normalize real-world structured-data fields directly in SQL -- email addresses, "
+    "phone numbers, IBANs, EU VAT numbers, credit-card numbers, URLs, and postal codes.\n\n"
+    "This worker turns the data-cleaning steps you would normally script in Python into set-based "
+    "DuckDB functions: check whether a value is well-formed, rewrite it into a canonical form for "
+    "joining/deduplication, or pull out a part (a domain, a country, a brand). Reach for it "
+    "whenever a table holds messy contact, banking, or payment fields that must be filtered, "
+    "standardized, or bucketed before use.\n\n"
+    "Two ideas run through the whole surface. First, every operation is offline and deterministic "
+    "-- validation checks syntax, structure, and checksums (mod-97 for IBAN, Luhn for cards, "
+    "per-country rules for VAT and postal codes) but never performs a DNS or network lookup, so it "
+    "is safe over huge tables. Second, outcomes are total and predictable: NULL input yields NULL "
+    "output; an invalid non-NULL value yields false from a validity test and NULL from a formatter "
+    "or extractor -- nothing raises (the one deliberate exception is an unknown postal-code "
+    "country, which errors so a typo is not mistaken for an invalid code).\n\n"
+    "Phone and VAT operations accept an optional ISO region/country argument (US and the "
+    "EU-prefixed form are the defaults); postal-code validation requires an explicit country. List "
+    "the schema to discover the exact functions and their signatures."
 )
 
 _CATALOG_DESCRIPTION_MD = (
@@ -91,45 +106,52 @@ _CATALOG_DESCRIPTION_MD = (
     "normalization come from [`email-validator`]"
     "(https://github.com/JoshData/python-email-validator). URL and postal-code handling are "
     "implemented in-process against per-country rules.\n\n"
-    "## Function surface\n\n"
-    "**Validity tests** -- `is_valid_email`, `is_valid_phone`, `is_valid_iban`, `is_valid_vat`, "
-    "`is_valid_card` (Luhn), `is_valid_url`, `is_valid_postal_code`. "
-    "**Normalizers & formatters** -- `normalize_email`, `format_phone_e164`, "
-    "`format_phone_national`, `format_phone_international`, `format_iban`, `format_vat`, "
-    "`normalize_url`, `mask_card`. "
-    "**Part extractors** -- `email_domain`, `phone_region`, `phone_type`, `iban_country`, "
-    "`card_brand`, `url_host`. "
-    "**Discovery tables** -- `supported_phone_regions` and `card_brands` enumerate what the worker "
-    "recognizes.\n\n"
+    "## What you get\n\n"
+    "The surface divides into three shapes -- **validity tests** that return a boolean, "
+    "**normalizers/formatters** that rewrite a value into a canonical string (ideal for joining or "
+    "deduplication), and **part extractors** that pull a single component (a domain, country, "
+    "brand, or host) out of a well-formed value -- plus a pair of discovery tables that enumerate "
+    "the phone regions and card brands the worker recognizes.\n\n"
+    "Phone and VAT functions take an optional ISO region/country argument (`'US'` and the "
+    "EU-prefixed form are defaults); postal-code validation requires a country. List the schema to "
+    "browse every function and its signature.\n\n"
     "```sql\n"
-    "SELECT conform.normalize_email('Test@Example.COM');        -- 'Test@example.com'\n"
-    "SELECT conform.format_phone_e164('07911 123456', 'GB');    -- '+447911123456'\n"
-    "SELECT conform.is_valid_iban('GB82 WEST 1234 5698 7654 32');\n"
-    "SELECT conform.card_brand('4111111111111111');             -- 'visa'\n"
-    "SELECT conform.mask_card('4111-1111-1111-1111');           -- '************1111'\n"
-    "```\n\n"
-    "Phone and VAT take an optional ISO region/country argument (`'US'` and the EU-prefixed form "
-    "are defaults); `is_valid_postal_code` requires a country. Query "
-    "`conform.supported_phone_regions()` and `conform.card_brands()` to see the full coverage."
+    "SELECT conform.main.normalize_email('Test@Example.COM');\n"
+    "SELECT conform.main.format_phone_e164('07911 123456', 'GB');\n"
+    "SELECT conform.main.mask_card('4111-1111-1111-1111');\n"
+    "```"
 )
 
 _SCHEMA_DESCRIPTION_LLM = (
-    "Field validation and normalization functions: validity tests, normalizers/formatters, and "
-    "part extractors for email, phone, IBAN, EU VAT, credit-card, URL, and postal-code values, "
-    "plus discovery tables of supported phone regions and card brands."
+    "Field-level validation, normalization, and extraction for the conform catalog; everything "
+    "lives in this single `main` schema.\n\n"
+    "Functions come in three shapes. Validity tests return BOOLEAN (true/false, NULL on NULL "
+    "input). Normalizers and formatters return a canonical VARCHAR -- a form suitable for storage, "
+    "joining, or deduplication -- or NULL when the input is invalid. Part extractors pull a single "
+    "component (such as a domain, country code, or card brand) out of a well-formed value. Two "
+    "discovery tables enumerate the phone regions and card brands the worker recognizes.\n\n"
+    "The fields covered are email, phone, IBAN, EU VAT, credit card, URL, and postal code. All "
+    "validation is offline and deterministic (no DNS or network). Phone and VAT accept an optional "
+    "ISO region/country; postal-code checks require a country. Use this schema to clean, validate, "
+    "and standardize contact, banking, and payment data."
 )
 
 _SCHEMA_DESCRIPTION_MD = (
-    "The `main` schema holds every conform function: validity tests "
-    "(`is_valid_email`, `is_valid_phone`, `is_valid_iban`, `is_valid_vat`, `is_valid_card`, "
-    "`is_valid_url`, `is_valid_postal_code`), normalizers/formatters (`normalize_email`, "
-    "`format_phone_e164`/`_national`/`_international`, `format_iban`, `format_vat`, "
-    "`normalize_url`, `mask_card`), and part extractors (`email_domain`, `phone_region`, "
-    "`phone_type`, `iban_country`, `card_brand`, `url_host`) for email, phone, IBAN, EU VAT, "
-    "credit-card, URL, and postal-code fields, plus the discovery tables "
-    "`supported_phone_regions` and `card_brands`. All validation is offline and deterministic "
-    "(no DNS or network). Use it to clean, validate, and standardize contact, banking, and "
-    "payment data."
+    "# conform · main schema\n\n"
+    "Field validation, normalization, and extraction for email, phone, IBAN, EU VAT, credit-card, "
+    "URL, and postal-code values, plus two discovery tables.\n\n"
+    "## What's here\n\n"
+    "The functions come in three shapes:\n\n"
+    "- **Validity tests** return `BOOLEAN` -- `true`/`false`, and `NULL` on `NULL` input.\n"
+    "- **Normalizers & formatters** return a canonical `VARCHAR` for storage, joining, or "
+    "deduplication, or `NULL` for invalid input.\n"
+    "- **Part extractors** pull one component (a domain, country code, brand, or host) out of a "
+    "well-formed value.\n\n"
+    "Two discovery tables enumerate the phone regions and card brands the worker recognizes.\n\n"
+    "## Conventions\n\n"
+    "All validation is **offline and deterministic** -- no DNS or network. Phone and VAT functions "
+    "accept an optional ISO region/country argument; postal-code checks require a country. Browse "
+    "the schema listing for every function and its exact signature."
 )
 
 _SCHEMA_EXAMPLE_QUERIES = (
@@ -158,15 +180,14 @@ _PHONE_REGIONS_DOC_LLM = (
     "`region` argument to `is_valid_phone(text, region)`, the phone formatters, `phone_region`, "
     "and `phone_type`.\n"
     "- `country_code` (`INTEGER`) -- its international dialling (country calling) code.\n\n"
-    "Query it directly (`SELECT * FROM conform.main.supported_phone_regions`) to discover valid "
-    "region values or look up a country's dialling code. Backed by the identically-named table "
-    "function, so the rows are identical."
+    "Read this table directly to discover valid region values or to look up a country's dialling "
+    "code. Backed by the identically-named table function, so the rows are identical."
 )
 
 _PHONE_REGIONS_DOC_MD = (
     "# `supported_phone_regions`\n\n"
-    "Discovery table of every phone region the worker understands, exposed as a regular table so "
-    "you can `SELECT * FROM conform.main.supported_phone_regions` without parentheses.\n\n"
+    "Discovery table of every phone region the worker understands, exposed as a regular table you "
+    "can read without parentheses.\n\n"
     "## Columns\n\n"
     "- `region` (VARCHAR, primary key) -- ISO-3166 alpha-2 region code (the optional `region` "
     "argument to the phone functions).\n"
@@ -182,15 +203,15 @@ _CARD_BRANDS_DOC_LLM = (
     "One row per card brand the `card_brand` scalar can emit. Single column:\n\n"
     "- `brand` (`VARCHAR`, primary key) -- a brand name such as `visa`, `mastercard`, `amex`, "
     "`discover`, `diners`, `jcb`.\n\n"
-    "Query it directly (`SELECT * FROM conform.main.card_brands`) to enumerate the recognized "
-    "brands -- e.g. to populate a UI filter or validate that a `card_brand(...)` result is within "
-    "the known set. Backed by the identically-named table function."
+    "Read this table directly to enumerate the recognized brands -- e.g. to populate a UI filter "
+    "or to validate that a `card_brand(...)` result is within the known set. Backed by the "
+    "identically-named table function."
 )
 
 _CARD_BRANDS_DOC_MD = (
     "# `card_brands`\n\n"
-    "Discovery table of every brand `card_brand()` can return, exposed as a regular table so you "
-    "can `SELECT * FROM conform.main.card_brands` without parentheses.\n\n"
+    "Discovery table of every brand `card_brand()` can return, exposed as a regular table you can "
+    "read without parentheses.\n\n"
     "## Columns\n\n"
     "- `brand` (VARCHAR, primary key) -- e.g. `visa`, `mastercard`, `amex`, `discover`, `diners`, "
     "`jcb`.\n\n"
@@ -198,6 +219,98 @@ _CARD_BRANDS_DOC_MD = (
     "```sql\n"
     "SELECT * FROM conform.main.card_brands ORDER BY brand;\n"
     "```"
+)
+
+# VGI413/VGI408: the schema's category registry (an ordered JSON array; array
+# order is the display order). Every object carries a `vgi.category` naming one of
+# these slugs (wired up below), so the categories drive complete navigation/SEO and
+# no category is left empty (VGI411/VGI412).
+_CATEGORIES_JSON = json.dumps(
+    [
+        {
+            "name": "email",
+            "title": "Email",
+            "description": "Validate, normalize, and extract parts of email addresses.",
+        },
+        {
+            "name": "phone",
+            "title": "Phone",
+            "description": "Validate, format, and classify phone numbers; discover supported regions.",
+        },
+        {
+            "name": "iban",
+            "title": "IBAN",
+            "description": "Validate, pretty-print, and extract the country of bank IBANs.",
+        },
+        {
+            "name": "vat",
+            "title": "EU VAT",
+            "description": "Validate and normalize EU VAT numbers.",
+        },
+        {
+            "name": "card",
+            "title": "Payment Card",
+            "description": "Luhn-check, brand-detect, and mask credit-card numbers; list known brands.",
+        },
+        {
+            "name": "url",
+            "title": "URL",
+            "description": "Validate, normalize, and extract the host of web URLs.",
+        },
+        {
+            "name": "postal",
+            "title": "Postal Code",
+            "description": "Format-check postal codes for supported countries.",
+        },
+    ]
+)
+
+# VGI152/VGI407: the agent-suitability suite (`vgi-lint simulate`). Each task is a
+# {name, prompt} object; `reference_sql` is a grader-only canonical solution and is
+# never shown to the analyst. Prompts are natural-language and self-contained; every
+# reference matches a documented example, so the suite is sound and deterministic.
+# Each task answers with a single scalar value, so grading compares VALUES only
+# (`ignore_column_names`) -- the analyst's auto-generated column label need not
+# match the reference's.
+_AGENT_TEST_TASKS_JSON = json.dumps(
+    [
+        {
+            "name": "normalize-email",
+            "prompt": "Normalize the email address 'Test@Example.COM' to its canonical form.",
+            "reference_sql": "SELECT conform.main.normalize_email('Test@Example.COM')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "phone-e164-gb",
+            "prompt": "Format the UK phone number '07911 123456' as a canonical E.164 string.",
+            "reference_sql": "SELECT conform.main.format_phone_e164('07911 123456', 'GB')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "validate-iban",
+            "prompt": "Check whether 'GB82 WEST 1234 5698 7654 32' is a valid IBAN. Return the boolean.",
+            "reference_sql": "SELECT conform.main.is_valid_iban('GB82 WEST 1234 5698 7654 32')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "mask-card",
+            "prompt": "Mask the card number '4111-1111-1111-1111', keeping only the last four digits visible.",
+            "reference_sql": "SELECT conform.main.mask_card('4111-1111-1111-1111')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "normalize-url",
+            "prompt": "Normalize the URL 'HTTP://Example.com:80/Path' to its canonical form.",
+            "reference_sql": "SELECT conform.main.normalize_url('HTTP://Example.com:80/Path')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "postal-us",
+            "prompt": "Is '90210' a well-formed United States postal code? Return the boolean.",
+            "reference_sql": "SELECT conform.main.is_valid_postal_code('90210', 'US')",
+            "ignore_column_names": True,
+        },
+    ]
 )
 
 _DISCOVERY_TABLES: list[Table] = [
@@ -216,6 +329,7 @@ _DISCOVERY_TABLES: list[Table] = [
             "vgi.doc_llm": _PHONE_REGIONS_DOC_LLM,
             "vgi.doc_md": _PHONE_REGIONS_DOC_MD,
             "vgi.keywords": keywords_json("phone, regions, supported regions, country code, dialling code, discovery"),
+            "vgi.category": "phone",
             "domain": "data-quality",
             "vgi.example_queries": json.dumps(
                 [
@@ -245,6 +359,7 @@ _DISCOVERY_TABLES: list[Table] = [
             "vgi.doc_llm": _CARD_BRANDS_DOC_LLM,
             "vgi.doc_md": _CARD_BRANDS_DOC_MD,
             "vgi.keywords": keywords_json("credit card, card brands, visa, mastercard, amex, discover, jcb, discovery"),
+            "vgi.category": "card",
             "domain": "data-quality",
             "vgi.example_queries": json.dumps(
                 [
@@ -281,6 +396,8 @@ _CONFORM_CATALOG = Catalog(
         "vgi.license": "MIT",
         "vgi.support_contact": "https://github.com/Query-farm/vgi-conform/issues",
         "vgi.support_policy_url": "https://github.com/Query-farm/vgi-conform/blob/main/README.md",
+        # VGI152/VGI407: agent-suitability suite (grader-only reference_sql per task).
+        "vgi.agent_test_tasks": _AGENT_TEST_TASKS_JSON,
     },
     source_url="https://github.com/Query-farm/vgi-conform",
     schemas=[
@@ -303,6 +420,8 @@ _CONFORM_CATALOG = Catalog(
                 # catalog object (the Catalog(source_url=...) argument) only.
                 "vgi.doc_llm": _SCHEMA_DESCRIPTION_LLM,
                 "vgi.doc_md": _SCHEMA_DESCRIPTION_MD,
+                # VGI413/VGI408: the schema's ordered category registry.
+                "vgi.categories": _CATEGORIES_JSON,
                 # VGI506 representative, catalog-qualified example queries.
                 "vgi.example_queries": _SCHEMA_EXAMPLE_QUERIES,
             },
