@@ -19,7 +19,7 @@ catalog-level provenance (set once on the catalog via the ``Catalog(source_url=)
 argument); repeating it on every function/schema is redundant (VGI139).
 
 :func:`function_tags` assembles these (plus any extra tags, e.g.
-``vgi.result_columns_md`` for table functions) into the ``dict`` a function
+``vgi.result_columns_schema`` for table functions) into the ``dict`` a function
 exposes as ``class Meta: tags = ...``.
 """
 

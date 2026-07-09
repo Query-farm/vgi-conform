@@ -1,10 +1,10 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "vgi-python[http]>=0.8.5",
-#     "phonenumbers>=8.13",
-#     "python-stdnum>=1.20",
-#     "email-validator>=2.1",
+#     "vgi-python[http]>=0.10.0",
+#     "phonenumbers>=9.0",
+#     "python-stdnum>=2.2",
+#     "email-validator>=2.3",
 # ]
 # ///
 """VGI worker exposing field validation + normalization to SQL.
@@ -192,10 +192,8 @@ _PHONE_REGIONS_DOC_MD = (
     "- `region` (VARCHAR, primary key) -- ISO-3166 alpha-2 region code (the optional `region` "
     "argument to the phone functions).\n"
     "- `country_code` (INTEGER) -- international dialling (country calling) code.\n\n"
-    "## Usage\n\n"
-    "```sql\n"
-    "SELECT * FROM conform.main.supported_phone_regions ORDER BY region;\n"
-    "```"
+    "Read it directly to discover valid region values or look up a dialling code; see the "
+    "table's example queries for ready-to-run SQL."
 )
 
 _CARD_BRANDS_DOC_LLM = (
@@ -215,10 +213,8 @@ _CARD_BRANDS_DOC_MD = (
     "## Columns\n\n"
     "- `brand` (VARCHAR, primary key) -- e.g. `visa`, `mastercard`, `amex`, `discover`, `diners`, "
     "`jcb`.\n\n"
-    "## Usage\n\n"
-    "```sql\n"
-    "SELECT * FROM conform.main.card_brands ORDER BY brand;\n"
-    "```"
+    "Read it directly to enumerate the recognized brands; see the table's example queries for "
+    "ready-to-run SQL."
 )
 
 # VGI413/VGI408: the schema's category registry (an ordered JSON array; array
@@ -274,10 +270,30 @@ _CATEGORIES_JSON = json.dumps(
 # match the reference's.
 _AGENT_TEST_TASKS_JSON = json.dumps(
     [
+        # --- email ---
+        {
+            "name": "validate-email",
+            "prompt": "Is 'a@b.com' a syntactically valid email address? Return the boolean.",
+            "reference_sql": "SELECT conform.main.is_valid_email('a@b.com')",
+            "ignore_column_names": True,
+        },
         {
             "name": "normalize-email",
             "prompt": "Normalize the email address 'Test@Example.COM' to its canonical form.",
             "reference_sql": "SELECT conform.main.normalize_email('Test@Example.COM')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "email-domain",
+            "prompt": "Extract just the domain part of the email address 'a@Example.com'.",
+            "reference_sql": "SELECT conform.main.email_domain('a@Example.com')",
+            "ignore_column_names": True,
+        },
+        # --- phone ---
+        {
+            "name": "validate-phone-us",
+            "prompt": "Is '202-456-1111' a valid US phone number? Return the boolean.",
+            "reference_sql": "SELECT conform.main.is_valid_phone('202-456-1111')",
             "ignore_column_names": True,
         },
         {
@@ -287,9 +303,81 @@ _AGENT_TEST_TASKS_JSON = json.dumps(
             "ignore_column_names": True,
         },
         {
+            "name": "phone-national-us",
+            "prompt": "Format the US phone number '2024561111' in national display form.",
+            "reference_sql": "SELECT conform.main.format_phone_national('2024561111')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "phone-international-us",
+            "prompt": "Format the US phone number '202-456-1111' in international display form.",
+            "reference_sql": "SELECT conform.main.format_phone_international('202-456-1111')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "phone-region",
+            "prompt": "Which ISO region does the phone number '+12024561111' belong to?",
+            "reference_sql": "SELECT conform.main.phone_region('+12024561111')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "phone-type-gb-mobile",
+            "prompt": "What line type is the UK phone number '07911 123456' (parsed for the UK)?",
+            "reference_sql": "SELECT conform.main.phone_type('07911 123456', 'GB')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "phone-regions-gb-dialling-code",
+            "prompt": (
+                "Using the worker's list of supported phone regions, what is the United Kingdom's "
+                "international dialling (country calling) code?"
+            ),
+            "reference_sql": ("SELECT country_code FROM conform.main.supported_phone_regions() WHERE region = 'GB'"),
+            "ignore_column_names": True,
+        },
+        # --- iban ---
+        {
             "name": "validate-iban",
             "prompt": "Check whether 'GB82 WEST 1234 5698 7654 32' is a valid IBAN. Return the boolean.",
             "reference_sql": "SELECT conform.main.is_valid_iban('GB82 WEST 1234 5698 7654 32')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "format-iban",
+            "prompt": "Pretty-print the IBAN 'GB82WEST12345698765432' into space-separated blocks of four.",
+            "reference_sql": "SELECT conform.main.format_iban('GB82WEST12345698765432')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "iban-country",
+            "prompt": "Which country does the IBAN 'DE89370400440532013000' belong to? Return the two-letter code.",
+            "reference_sql": "SELECT conform.main.iban_country('DE89370400440532013000')",
+            "ignore_column_names": True,
+        },
+        # --- vat ---
+        {
+            "name": "validate-vat",
+            "prompt": "Is 'DE136695976' a valid country-prefixed EU VAT number? Return the boolean.",
+            "reference_sql": "SELECT conform.main.is_valid_vat('DE136695976')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "format-vat",
+            "prompt": "Normalize the EU VAT number 'DE 136 695 976' to its compact canonical form.",
+            "reference_sql": "SELECT conform.main.format_vat('DE 136 695 976')",
+            "ignore_column_names": True,
+        },
+        # --- card ---
+        {
+            "name": "validate-card-luhn",
+            "prompt": "Does the card number '4111 1111 1111 1111' pass the Luhn checksum? Return the boolean.",
+            "reference_sql": "SELECT conform.main.is_valid_card('4111 1111 1111 1111')",
+            "ignore_column_names": True,
+        },
+        {
+            "name": "card-brand",
+            "prompt": "What payment-card brand is the number '4111111111111111'?",
+            "reference_sql": "SELECT conform.main.card_brand('4111111111111111')",
             "ignore_column_names": True,
         },
         {
@@ -299,11 +387,31 @@ _AGENT_TEST_TASKS_JSON = json.dumps(
             "ignore_column_names": True,
         },
         {
+            "name": "card-brands-count",
+            "prompt": "How many distinct payment-card brands does the worker recognize?",
+            "reference_sql": "SELECT count(*) FROM conform.main.card_brands()",
+            "ignore_column_names": True,
+        },
+        # --- url ---
+        {
+            "name": "validate-url",
+            "prompt": "Is 'https://example.com/path' a valid absolute URL? Return the boolean.",
+            "reference_sql": "SELECT conform.main.is_valid_url('https://example.com/path')",
+            "ignore_column_names": True,
+        },
+        {
             "name": "normalize-url",
             "prompt": "Normalize the URL 'HTTP://Example.com:80/Path' to its canonical form.",
             "reference_sql": "SELECT conform.main.normalize_url('HTTP://Example.com:80/Path')",
             "ignore_column_names": True,
         },
+        {
+            "name": "url-host",
+            "prompt": "Extract the host (domain) from the URL 'https://WWW.Example.com/a'.",
+            "reference_sql": "SELECT conform.main.url_host('https://WWW.Example.com/a')",
+            "ignore_column_names": True,
+        },
+        # --- postal ---
         {
             "name": "postal-us",
             "prompt": "Is '90210' a well-formed United States postal code? Return the boolean.",
@@ -334,8 +442,11 @@ _DISCOVERY_TABLES: list[Table] = [
             "vgi.example_queries": json.dumps(
                 [
                     {
-                        "description": "List every supported phone region.",
-                        "sql": "SELECT * FROM conform.main.supported_phone_regions ORDER BY region",
+                        "description": "Count the supported regions and the distinct dialling codes among them.",
+                        "sql": (
+                            "SELECT count(*) AS regions, count(DISTINCT country_code) AS dialling_codes "
+                            "FROM conform.main.supported_phone_regions"
+                        ),
                     },
                     {
                         "description": "Look up the UK's international dialling code.",
@@ -364,8 +475,8 @@ _DISCOVERY_TABLES: list[Table] = [
             "vgi.example_queries": json.dumps(
                 [
                     {
-                        "description": "List every recognized card brand.",
-                        "sql": "SELECT * FROM conform.main.card_brands ORDER BY brand",
+                        "description": "Check whether 'visa' is among the recognized card brands.",
+                        "sql": "SELECT count(*) > 0 AS has_visa FROM conform.main.card_brands WHERE brand = 'visa'",
                     },
                     {
                         "description": "Count how many card brands the worker recognizes.",

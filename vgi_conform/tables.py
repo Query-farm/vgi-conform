@@ -12,6 +12,7 @@ per-row, single-value conform functions are *scalars* and live in
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import ClassVar
 
@@ -82,32 +83,41 @@ class SupportedPhoneRegionsFunction(TableFunctionGenerator[_NoArgs]):
             description_md=(
                 "# `supported_phone_regions`\n\n"
                 "Discovery table of every phone region the worker understands.\n\n"
-                "## Usage\n\n"
-                "```sql\n"
-                "SELECT * FROM conform.supported_phone_regions() ORDER BY region;\n"
-                "```\n\n"
                 "## Columns\n\n"
                 "- `region` (VARCHAR) -- ISO-3166 alpha-2 region code.\n"
-                "- `country_code` (INTEGER) -- international dialling code."
+                "- `country_code` (INTEGER) -- international dialling code.\n\n"
+                "See the example queries for ready-to-run SQL."
             ),
             keywords="phone, regions, supported regions, country code, dialling code, discovery",
             relative_path=_TABLES_PATH,
             extra={
-                "vgi.result_columns_md": (
-                    "| column | type | description |\n"
-                    "| --- | --- | --- |\n"
-                    "| `region` | VARCHAR | ISO-3166 alpha-2 region code (the optional `region` argument). |\n"
-                    "| `country_code` | INTEGER | International dialling (country calling) code. |\n"
+                # VGI414: the retired free-form `vgi.result_columns_md` is migrated to the
+                # structured `vgi.result_columns_schema` (validated JSON: name/type/description).
+                "vgi.result_columns_schema": json.dumps(
+                    [
+                        {
+                            "name": "region",
+                            "type": "VARCHAR",
+                            "description": (
+                                "ISO-3166 alpha-2 region code (the optional `region` argument to the phone functions)."
+                            ),
+                        },
+                        {
+                            "name": "country_code",
+                            "type": "INTEGER",
+                            "description": "International dialling (country calling) code.",
+                        },
+                    ]
                 ),
             },
         )
         examples = [
             FunctionExample(
-                sql="SELECT count(*) FROM conform.supported_phone_regions()",
+                sql="SELECT count(*) AS regions FROM conform.main.supported_phone_regions()",
                 description="How many phone regions are supported",
             ),
             FunctionExample(
-                sql="SELECT country_code FROM conform.supported_phone_regions() WHERE region = 'GB'",
+                sql="SELECT country_code FROM conform.main.supported_phone_regions() WHERE region = 'GB'",
                 description="Dialling code for the UK",
             ),
         ]
@@ -163,27 +173,29 @@ class CardBrandsFunction(TableFunctionGenerator[_NoArgs]):
             description_md=(
                 "# `card_brands`\n\n"
                 "Discovery table of every brand `card_brand()` can return.\n\n"
-                "## Usage\n\n"
-                "```sql\n"
-                "SELECT * FROM conform.card_brands() ORDER BY brand;\n"
-                "```\n\n"
                 "## Columns\n\n"
-                "- `brand` (VARCHAR) -- e.g. `visa`, `mastercard`, `amex`."
+                "- `brand` (VARCHAR) -- e.g. `visa`, `mastercard`, `amex`.\n\n"
+                "See the example queries for ready-to-run SQL."
             ),
             keywords="credit card, card brands, visa, mastercard, amex, discover, jcb, discovery",
             relative_path=_TABLES_PATH,
             extra={
-                "vgi.result_columns_md": (
-                    "| column | type | description |\n"
-                    "| --- | --- | --- |\n"
-                    "| `brand` | VARCHAR | A brand `card_brand()` can return, e.g. `visa`, `mastercard`, `amex`. |\n"
+                # VGI414: retired `vgi.result_columns_md` migrated to the structured tag.
+                "vgi.result_columns_schema": json.dumps(
+                    [
+                        {
+                            "name": "brand",
+                            "type": "VARCHAR",
+                            "description": "A brand `card_brand()` can return, e.g. `visa`, `mastercard`, `amex`.",
+                        }
+                    ]
                 ),
             },
         )
         examples = [
             FunctionExample(
-                sql="SELECT * FROM conform.card_brands() ORDER BY brand",
-                description="List the recognized card brands",
+                sql="SELECT count(*) AS brand_count FROM conform.main.card_brands()",
+                description="Count the recognized card brands",
             ),
         ]
 

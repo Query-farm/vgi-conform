@@ -137,7 +137,7 @@ class IsValidEmailFunction(ScalarFunction):
             relative_path=_SCALARS_PATH,
         )
         examples = [
-            FunctionExample(sql="SELECT conform.is_valid_email('a@b.com')", description="Valid email"),
+            FunctionExample(sql="SELECT conform.main.is_valid_email('a@b.com')", description="Valid email"),
         ]
 
     @classmethod
@@ -185,7 +185,7 @@ class NormalizeEmailFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.normalize_email('Test@Example.COM')",
+                sql="SELECT conform.main.normalize_email('Test@Example.COM')",
                 description="Normalize an email address",
             ),
         ]
@@ -233,7 +233,7 @@ class EmailDomainFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.email_domain('a@Example.com')",
+                sql="SELECT conform.main.email_domain('a@Example.com')",
                 description="Extract the email domain",
             ),
         ]
@@ -290,7 +290,7 @@ class IsValidPhoneFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.is_valid_phone('202-456-1111')",
+                sql="SELECT conform.main.is_valid_phone('202-456-1111')",
                 description="Validate a US phone number",
             ),
         ]
@@ -339,7 +339,7 @@ class IsValidPhoneRegionFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.is_valid_phone('07911 123456', 'GB')",
+                sql="SELECT conform.main.is_valid_phone('07911 123456', 'GB')",
                 description="Validate a UK phone number",
             ),
         ]
@@ -348,7 +348,7 @@ class IsValidPhoneRegionFunction(ScalarFunction):
     def compute(
         cls,
         text: Annotated[pa.StringArray, Param(doc="Phone number to validate.")],
-        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
+        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code such as US or GB, used to parse the number.")],
     ) -> Annotated[pa.BooleanArray, Returns()]:
         """Map each input row to its output value."""
         return _map_bool(text, lambda x: validators.is_valid_phone(x, region))
@@ -397,7 +397,7 @@ class FormatPhoneE164Function(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.format_phone_e164('202-456-1111')",
+                sql="SELECT conform.main.format_phone_e164('202-456-1111')",
                 description="Format a US phone number as E.164",
             ),
         ]
@@ -444,7 +444,7 @@ class FormatPhoneE164RegionFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.format_phone_e164('07911 123456', 'GB')",
+                sql="SELECT conform.main.format_phone_e164('07911 123456', 'GB')",
                 description="Format a UK phone number as E.164",
             ),
         ]
@@ -453,7 +453,7 @@ class FormatPhoneE164RegionFunction(ScalarFunction):
     def compute(
         cls,
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
-        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
+        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code such as US or GB, used to parse the number.")],
     ) -> Annotated[pa.StringArray, Returns()]:
         """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_phone_e164(x, region))
@@ -494,7 +494,7 @@ class FormatPhoneNationalFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.format_phone_national('2024561111')",
+                sql="SELECT conform.main.format_phone_national('2024561111')",
                 description="Format a US phone number in national form",
             ),
         ]
@@ -541,7 +541,7 @@ class FormatPhoneNationalRegionFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.format_phone_national('07911 123456', 'GB')",
+                sql="SELECT conform.main.format_phone_national('07911 123456', 'GB')",
                 description="Format a UK phone number in national form",
             ),
         ]
@@ -550,7 +550,7 @@ class FormatPhoneNationalRegionFunction(ScalarFunction):
     def compute(
         cls,
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
-        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
+        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code such as US or GB, used to parse the number.")],
     ) -> Annotated[pa.StringArray, Returns()]:
         """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_phone_national(x, region))
@@ -591,7 +591,7 @@ class FormatPhoneInternationalFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.format_phone_international('202-456-1111')",
+                sql="SELECT conform.main.format_phone_international('202-456-1111')",
                 description="Format a US phone number in international form",
             ),
         ]
@@ -639,7 +639,7 @@ class FormatPhoneInternationalRegionFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.format_phone_international('07911 123456', 'GB')",
+                sql="SELECT conform.main.format_phone_international('07911 123456', 'GB')",
                 description="Format a UK phone number in international form",
             ),
         ]
@@ -648,7 +648,7 @@ class FormatPhoneInternationalRegionFunction(ScalarFunction):
     def compute(
         cls,
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
-        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
+        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code such as US or GB, used to parse the number.")],
     ) -> Annotated[pa.StringArray, Returns()]:
         """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_phone_international(x, region))
@@ -690,7 +690,7 @@ class PhoneRegionFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.phone_region('+447911123456')",
+                sql="SELECT conform.main.phone_region('+447911123456')",
                 description="Region a number belongs to",
             ),
         ]
@@ -737,7 +737,7 @@ class PhoneRegionRegionFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.phone_region('07911 123456', 'GB')",
+                sql="SELECT conform.main.phone_region('07911 123456', 'GB')",
                 description="Region a UK number belongs to",
             ),
         ]
@@ -746,7 +746,7 @@ class PhoneRegionRegionFunction(ScalarFunction):
     def compute(
         cls,
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
-        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
+        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code such as US or GB, used to parse the number.")],
     ) -> Annotated[pa.StringArray, Returns()]:
         """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.phone_region(x, region))
@@ -787,7 +787,7 @@ class PhoneTypeFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.phone_type('202-456-1111')",
+                sql="SELECT conform.main.phone_type('202-456-1111')",
                 description="Line type of a US number",
             ),
         ]
@@ -834,7 +834,7 @@ class PhoneTypeRegionFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.phone_type('07911 123456', 'GB')",
+                sql="SELECT conform.main.phone_type('07911 123456', 'GB')",
                 description="Line type of a UK number",
             ),
         ]
@@ -843,7 +843,7 @@ class PhoneTypeRegionFunction(ScalarFunction):
     def compute(
         cls,
         text: Annotated[pa.StringArray, Param(doc="Phone number.")],
-        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code, e.g. 'US', 'GB'.")],
+        region: Annotated[str, ConstParam("ISO-3166 alpha-2 region code such as US or GB, used to parse the number.")],
     ) -> Annotated[pa.StringArray, Returns()]:
         """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.phone_type(x, region))
@@ -890,7 +890,7 @@ class IsValidIbanFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.is_valid_iban('GB82 WEST 1234 5698 7654 32')",
+                sql="SELECT conform.main.is_valid_iban('GB82 WEST 1234 5698 7654 32')",
                 description="Validate an IBAN",
             ),
         ]
@@ -940,7 +940,7 @@ class FormatIbanFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.format_iban('GB82WEST12345698765432')",
+                sql="SELECT conform.main.format_iban('GB82WEST12345698765432')",
                 description="Pretty-print an IBAN",
             ),
         ]
@@ -987,7 +987,7 @@ class IbanCountryFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.iban_country('GB82WEST12345698765432')",
+                sql="SELECT conform.main.iban_country('GB82WEST12345698765432')",
                 description="Country code of an IBAN",
             ),
         ]
@@ -1040,7 +1040,7 @@ class IsValidVatFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.is_valid_vat('DE136695976')",
+                sql="SELECT conform.main.is_valid_vat('DE136695976')",
                 description="Validate a country-prefixed EU VAT number",
             ),
         ]
@@ -1089,7 +1089,7 @@ class IsValidVatCountryFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.is_valid_vat('136695976', 'DE')",
+                sql="SELECT conform.main.is_valid_vat('136695976', 'DE')",
                 description="Validate a German VAT number (unprefixed)",
             ),
         ]
@@ -1098,7 +1098,7 @@ class IsValidVatCountryFunction(ScalarFunction):
     def compute(
         cls,
         text: Annotated[pa.StringArray, Param(doc="VAT number (national form).")],
-        country: Annotated[str, ConstParam("ISO-3166 alpha-2 country code, e.g. 'DE', 'FR'.")],
+        country: Annotated[str, ConstParam("ISO-3166 alpha-2 country code such as DE or FR.")],
     ) -> Annotated[pa.BooleanArray, Returns()]:
         """Map each input row to its output value."""
         return _map_bool(text, lambda x: validators.is_valid_vat(x, country))
@@ -1139,7 +1139,7 @@ class FormatVatFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.format_vat('DE 136 695 976')",
+                sql="SELECT conform.main.format_vat('DE 136 695 976')",
                 description="Compact an EU VAT number",
             ),
         ]
@@ -1185,7 +1185,7 @@ class FormatVatCountryFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.format_vat('136 695 976', 'DE')",
+                sql="SELECT conform.main.format_vat('136 695 976', 'DE')",
                 description="Compact a German VAT number",
             ),
         ]
@@ -1194,7 +1194,7 @@ class FormatVatCountryFunction(ScalarFunction):
     def compute(
         cls,
         text: Annotated[pa.StringArray, Param(doc="VAT number (national form).")],
-        country: Annotated[str, ConstParam("ISO-3166 alpha-2 country code, e.g. 'DE', 'FR'.")],
+        country: Annotated[str, ConstParam("ISO-3166 alpha-2 country code such as DE or FR.")],
     ) -> Annotated[pa.StringArray, Returns()]:
         """Map each input row to its output value."""
         return _map_str(text, lambda x: validators.format_vat(x, country))
@@ -1242,7 +1242,7 @@ class IsValidCardFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.is_valid_card('4111 1111 1111 1111')",
+                sql="SELECT conform.main.is_valid_card('4111 1111 1111 1111')",
                 description="Validate a card number via Luhn",
             ),
         ]
@@ -1292,7 +1292,7 @@ class CardBrandFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.card_brand('4111111111111111')",
+                sql="SELECT conform.main.card_brand('4111111111111111')",
                 description="Detect the card brand",
             ),
         ]
@@ -1344,7 +1344,7 @@ class MaskCardFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.mask_card('4111-1111-1111-1111')",
+                sql="SELECT conform.main.mask_card('4111-1111-1111-1111')",
                 description="Mask a card number",
             ),
         ]
@@ -1397,7 +1397,7 @@ class IsValidUrlFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.is_valid_url('https://example.com/path')",
+                sql="SELECT conform.main.is_valid_url('https://example.com/path')",
                 description="Validate a URL",
             ),
         ]
@@ -1446,7 +1446,7 @@ class NormalizeUrlFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.normalize_url('HTTP://Example.com:80/Path')",
+                sql="SELECT conform.main.normalize_url('HTTP://Example.com:80/Path')",
                 description="Normalize a URL",
             ),
         ]
@@ -1493,7 +1493,7 @@ class UrlHostFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.url_host('https://WWW.Example.com/a')",
+                sql="SELECT conform.main.url_host('https://WWW.Example.com/a')",
                 description="Extract the URL host",
             ),
         ]
@@ -1552,11 +1552,11 @@ class IsValidPostalCodeFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.is_valid_postal_code('90210', 'US')",
+                sql="SELECT conform.main.is_valid_postal_code('90210', 'US')",
                 description="Validate a US ZIP code",
             ),
             FunctionExample(
-                sql="SELECT conform.is_valid_postal_code('K1A 0B1', 'CA')",
+                sql="SELECT conform.main.is_valid_postal_code('K1A 0B1', 'CA')",
                 description="Validate a Canadian postal code",
             ),
         ]
@@ -1565,7 +1565,18 @@ class IsValidPostalCodeFunction(ScalarFunction):
     def compute(
         cls,
         text: Annotated[pa.StringArray, Param(doc="Postal code to validate.")],
-        country: Annotated[str, ConstParam("ISO-3166 alpha-2 country code, e.g. 'US', 'CA'.")],
+        # VGI317: the supported country set is genuinely closed, so declare it as a
+        # machine-readable `choices` constraint (sourced from the validators module so
+        # the two never drift). This is enforced at bind: an unsupported country raises
+        # before the row loop, giving the same "unknown country is an error" behaviour
+        # the validator documents, now discoverable via vgi_function_arguments().
+        country: Annotated[
+            str,
+            ConstParam(
+                "ISO-3166 alpha-2 country code, e.g. 'US', 'CA'.",
+                choices=validators.supported_postal_countries(),
+            ),
+        ],
     ) -> Annotated[pa.BooleanArray, Returns()]:
         """Map each input row to its output value."""
         # validators.is_valid_postal_code raises ValueError for unknown country;
