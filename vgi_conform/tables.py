@@ -84,9 +84,8 @@ class SupportedPhoneRegionsFunction(TableFunctionGenerator[_NoArgs]):
                 "# `supported_phone_regions`\n\n"
                 "Discovery table of every phone region the worker understands.\n\n"
                 "## Columns\n\n"
-                "- `region` (VARCHAR) -- ISO-3166 alpha-2 region code.\n"
-                "- `country_code` (INTEGER) -- international dialling code.\n\n"
-                "See the example queries for ready-to-run SQL."
+                "- `region` (`VARCHAR`) -- ISO-3166 alpha-2 region code.\n"
+                "- `country_code` (`INTEGER`) -- international dialling code."
             ),
             keywords="phone, regions, supported regions, country code, dialling code, discovery",
             relative_path=_TABLES_PATH,
@@ -174,8 +173,7 @@ class CardBrandsFunction(TableFunctionGenerator[_NoArgs]):
                 "# `card_brands`\n\n"
                 "Discovery table of every brand `card_brand()` can return.\n\n"
                 "## Columns\n\n"
-                "- `brand` (VARCHAR) -- e.g. `visa`, `mastercard`, `amex`.\n\n"
-                "See the example queries for ready-to-run SQL."
+                "- `brand` (`VARCHAR`) -- e.g. `visa`, `mastercard`, `amex`."
             ),
             keywords="credit card, card brands, visa, mastercard, amex, discover, jcb, discovery",
             relative_path=_TABLES_PATH,
@@ -216,7 +214,99 @@ class CardBrandsFunction(TableFunctionGenerator[_NoArgs]):
         out.finish()
 
 
+_POSTAL_COUNTRIES_SCHEMA = pa.schema(
+    [field("country", pa.string(), "An ISO-3166 alpha-2 country code is_valid_postal_code accepts.", nullable=False)]
+)
+
+
+@init_single_worker
+@bind_fixed_schema
+class SupportedPostalCountriesFunction(TableFunctionGenerator[_NoArgs]):
+    """The countries ``is_valid_postal_code(text, country)`` understands, one per row.
+
+    ``country`` is exactly the value accepted as the second argument to
+    ``is_valid_postal_code``; any other country makes that scalar raise, so read
+    this table first to discover the supported set.
+    """
+
+    FIXED_SCHEMA: ClassVar[pa.Schema] = _POSTAL_COUNTRIES_SCHEMA
+
+    class Meta:
+        """Function metadata."""
+
+        name = "supported_postal_countries"
+        description = "The countries is_valid_postal_code() understands (US, CA, GB, DE, ...)"
+        categories = ["conform", "postal"]
+        tags = function_tags(
+            title="List Supported Postal Countries",
+            description_llm=(
+                "## `supported_postal_countries()`\n\n"
+                "A **table function** (no arguments) returning one row per country whose "
+                "postal-code format `is_valid_postal_code(text, country)` can check, with a "
+                "single column:\n\n"
+                "- `country` (`VARCHAR`) -- an ISO-3166 alpha-2 code such as `US`, `CA`, "
+                "`GB`, `DE`, `FR`, `NL`, `AU`, `JP`, `IN`, `BR`.\n\n"
+                "Coverage is intentionally modest. Because `is_valid_postal_code` **raises** "
+                "on an unsupported country (so a typo is not mistaken for an invalid code), "
+                "read this table first -- or join against it -- to confirm a country is "
+                "supported before calling the scalar."
+            ),
+            description_md=(
+                "# `supported_postal_countries`\n\n"
+                "Discovery table of every country `is_valid_postal_code()` can format-check.\n\n"
+                "## Columns\n\n"
+                "- `country` (`VARCHAR`) -- ISO-3166 alpha-2 code, e.g. `US`, `CA`, `GB`."
+            ),
+            keywords="postal code, zip code, postcode, countries, supported countries, country, discovery",
+            relative_path=_TABLES_PATH,
+            extra={
+                "vgi.result_columns_schema": json.dumps(
+                    [
+                        {
+                            "name": "country",
+                            "type": "VARCHAR",
+                            "description": (
+                                "An ISO-3166 alpha-2 country code accepted as the `country` "
+                                "argument to `is_valid_postal_code`."
+                            ),
+                        }
+                    ]
+                ),
+            },
+        )
+        examples = [
+            FunctionExample(
+                sql="SELECT count(*) AS countries FROM conform.main.supported_postal_countries()",
+                description="Count the supported postal-code countries",
+            ),
+            FunctionExample(
+                sql=(
+                    "SELECT count(*) > 0 AS supported "
+                    "FROM conform.main.supported_postal_countries() WHERE country = 'US'"
+                ),
+                description="Check whether US postal codes are supported before validating",
+            ),
+        ]
+
+    @classmethod
+    def cardinality(cls, params: BindParams[_NoArgs]) -> TableCardinality:
+        """Estimated and maximum row count for the planner."""
+        return TableCardinality(estimate=10, max=100)
+
+    @classmethod
+    def process(cls, params: ProcessParams[_NoArgs], state: None, out: OutputCollector) -> None:
+        """Emit one batch of discovery rows."""
+        out.emit(
+            pa.RecordBatch.from_pydict(
+                {"country": validators.supported_postal_countries()},
+                schema=params.output_schema,
+            )
+        )
+        out.finish()
+
+
 TABLE_FUNCTIONS: list[type] = [
     SupportedPhoneRegionsFunction,
     CardBrandsFunction,
+    SupportedPostalCountriesFunction,
 ]

@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "vgi-python[http]>=0.10.0",
+#     "vgi-python[http]>=0.16.1",
 #     "phonenumbers>=9.0",
 #     "python-stdnum>=2.2",
 #     "email-validator>=2.3",
@@ -12,7 +12,7 @@
 Assembles the conform functions in ``vgi_conform`` into a single ``conform``
 catalog and runs the worker over stdio (DuckDB subprocess) or HTTP. It validates
 AND normalizes real-world structured data fields -- phone, email, IBAN, VAT,
-credit card, URL, postal code -- as DuckDB scalar functions, plus two discovery
+credit card, URL, postal code -- as DuckDB scalar functions, plus three discovery
 table functions.
 
 Usage:
@@ -37,9 +37,11 @@ Usage:
 from __future__ import annotations
 
 import json
+from collections import defaultdict
 
 from vgi import Worker
 from vgi.catalog import Catalog, Schema, Table
+from vgi.metadata import FunctionExample
 
 from vgi_conform.meta import keywords_json
 from vgi_conform.scalars import SCALAR_FUNCTIONS
@@ -47,6 +49,7 @@ from vgi_conform.tables import (
     TABLE_FUNCTIONS,
     CardBrandsFunction,
     SupportedPhoneRegionsFunction,
+    SupportedPostalCountriesFunction,
 )
 
 _FUNCTIONS: list[type] = [
@@ -58,9 +61,39 @@ _FUNCTIONS: list[type] = [
 # `vgi.category`. Each function's `Meta.categories` second element already names its
 # family (email/phone/iban/vat/card/url/postal); mirror it into the per-object
 # `vgi.category` tag so the schema registry (_CATEGORIES_JSON) and its members stay
-# in lockstep. (The two discovery tables set `vgi.category` inline below.)
+# in lockstep. (The three discovery tables set `vgi.category` inline below.)
 for _fn in _FUNCTIONS:
     _fn.Meta.tags["vgi.category"] = _fn.Meta.categories[1]  # type: ignore[attr-defined]
+
+# VGI515: `vgi.example_queries` must be a JSON list of {description, sql} objects so
+# every example carries a human-readable description. Each function already declares
+# `Meta.examples` (FunctionExample(sql, description)) as its single source of truth --
+# used for native `duckdb_functions().examples` and for --execute coverage. Mirror
+# those into the tag as a described list so the community extension does not fall back
+# to synthesizing a bare, description-less SQL blob for the tag.
+#
+# Arity-overloaded scalars (e.g. `is_valid_phone(text)` and `is_valid_phone(text,
+# region)`) are separate classes sharing one `Meta.name`. The extension unions their
+# tags into a single catalog entry AND surfaces every overload's `Meta.examples` into
+# the one native examples column. So the tag must carry EVERY overload's examples
+# (aggregated by name); otherwise the un-tagged overload's native example survives the
+# tag/native merge as a description-less entry and trips VGI515.
+_EXAMPLES_BY_NAME: dict[str, list[FunctionExample]] = defaultdict(list)
+for _fn in _FUNCTIONS:
+    for _ex in getattr(_fn.Meta, "examples", []):  # type: ignore[attr-defined]
+        _EXAMPLES_BY_NAME[_fn.Meta.name].append(_ex)  # type: ignore[attr-defined]
+
+for _fn in _FUNCTIONS:
+    _seen_sql: set[str] = set()
+    _described: list[dict[str, str]] = []
+    for _ex in _EXAMPLES_BY_NAME.get(_fn.Meta.name, []):  # type: ignore[attr-defined]
+        _key = " ".join(_ex.sql.split()).lower()
+        if _key in _seen_sql:
+            continue
+        _seen_sql.add(_key)
+        _described.append({"description": _ex.description, "sql": _ex.sql})
+    if _described:
+        _fn.Meta.tags["vgi.example_queries"] = json.dumps(_described)  # type: ignore[attr-defined]
 
 _CATALOG_DESCRIPTION_LLM = (
     "Validate and normalize real-world structured-data fields directly in SQL -- email addresses, "
@@ -78,8 +111,7 @@ _CATALOG_DESCRIPTION_LLM = (
     "or extractor -- nothing raises (the one deliberate exception is an unknown postal-code "
     "country, which errors so a typo is not mistaken for an invalid code).\n\n"
     "Phone and VAT operations accept an optional ISO region/country argument (US and the "
-    "EU-prefixed form are the defaults); postal-code validation requires an explicit country. List "
-    "the schema to discover the exact functions and their signatures."
+    "EU-prefixed form are the defaults); postal-code validation requires an explicit country."
 )
 
 _CATALOG_DESCRIPTION_MD = (
@@ -110,11 +142,10 @@ _CATALOG_DESCRIPTION_MD = (
     "The surface divides into three shapes -- **validity tests** that return a boolean, "
     "**normalizers/formatters** that rewrite a value into a canonical string (ideal for joining or "
     "deduplication), and **part extractors** that pull a single component (a domain, country, "
-    "brand, or host) out of a well-formed value -- plus a pair of discovery tables that enumerate "
+    "brand, or host) out of a well-formed value -- plus discovery tables that enumerate "
     "the phone regions and card brands the worker recognizes.\n\n"
     "Phone and VAT functions take an optional ISO region/country argument (`'US'` and the "
-    "EU-prefixed form are defaults); postal-code validation requires a country. List the schema to "
-    "browse every function and its signature.\n\n"
+    "EU-prefixed form are defaults); postal-code validation requires a country.\n\n"
     "```sql\n"
     "SELECT conform.main.normalize_email('Test@Example.COM');\n"
     "SELECT conform.main.format_phone_e164('07911 123456', 'GB');\n"
@@ -125,8 +156,8 @@ _CATALOG_DESCRIPTION_MD = (
 _SCHEMA_DESCRIPTION_LLM = (
     "Field-level validation, normalization, and extraction for the conform catalog; everything "
     "lives in this single `main` schema.\n\n"
-    "Functions come in three shapes. Validity tests return BOOLEAN (true/false, NULL on NULL "
-    "input). Normalizers and formatters return a canonical VARCHAR -- a form suitable for storage, "
+    "Functions come in three shapes. Validity tests return `BOOLEAN` (true/false, NULL on NULL "
+    "input). Normalizers and formatters return a canonical `VARCHAR` -- a form suitable for storage, "
     "joining, or deduplication -- or NULL when the input is invalid. Part extractors pull a single "
     "component (such as a domain, country code, or card brand) out of a well-formed value. Two "
     "discovery tables enumerate the phone regions and card brands the worker recognizes.\n\n"
@@ -139,7 +170,7 @@ _SCHEMA_DESCRIPTION_LLM = (
 _SCHEMA_DESCRIPTION_MD = (
     "# conform · main schema\n\n"
     "Field validation, normalization, and extraction for email, phone, IBAN, EU VAT, credit-card, "
-    "URL, and postal-code values, plus two discovery tables.\n\n"
+    "URL, and postal-code values, plus three discovery tables.\n\n"
     "## What's here\n\n"
     "The functions come in three shapes:\n\n"
     "- **Validity tests** return `BOOLEAN` -- `true`/`false`, and `NULL` on `NULL` input.\n"
@@ -150,19 +181,46 @@ _SCHEMA_DESCRIPTION_MD = (
     "Two discovery tables enumerate the phone regions and card brands the worker recognizes.\n\n"
     "## Conventions\n\n"
     "All validation is **offline and deterministic** -- no DNS or network. Phone and VAT functions "
-    "accept an optional ISO region/country argument; postal-code checks require a country. Browse "
-    "the schema listing for every function and its exact signature."
+    "accept an optional ISO region/country argument; postal-code checks require a country."
 )
 
-_SCHEMA_EXAMPLE_QUERIES = (
-    "SELECT conform.main.is_valid_email('a@b.com');\n"
-    "SELECT conform.main.normalize_email('Test@Example.COM');\n"
-    "SELECT conform.main.format_phone_e164('202-456-1111');\n"
-    "SELECT conform.main.is_valid_iban('GB82 WEST 1234 5698 7654 32');\n"
-    "SELECT conform.main.card_brand('4111111111111111');\n"
-    "SELECT conform.main.mask_card('4111-1111-1111-1111');\n"
-    "SELECT conform.main.is_valid_postal_code('90210', 'US');\n"
-    "SELECT * FROM conform.main.card_brands() ORDER BY brand;"
+# VGI515: vgi.example_queries must be a JSON list of {description, sql} objects so
+# every example carries a human-readable description.
+_SCHEMA_EXAMPLE_QUERIES = json.dumps(
+    [
+        {
+            "description": "Check whether a string is a syntactically valid email address.",
+            "sql": "SELECT conform.main.is_valid_email('a@b.com')",
+        },
+        {
+            "description": "Canonicalize an email address (lower-cased domain) for deduplication.",
+            "sql": "SELECT conform.main.normalize_email('Test@Example.COM')",
+        },
+        {
+            "description": "Format a US phone number into canonical E.164 storage form.",
+            "sql": "SELECT conform.main.format_phone_e164('202-456-1111')",
+        },
+        {
+            "description": "Validate an IBAN (length plus mod-97 checksum).",
+            "sql": "SELECT conform.main.is_valid_iban('GB82 WEST 1234 5698 7654 32')",
+        },
+        {
+            "description": "Detect a payment card's brand from its prefix and length.",
+            "sql": "SELECT conform.main.card_brand('4111111111111111')",
+        },
+        {
+            "description": "Mask a card number, keeping only the last four digits.",
+            "sql": "SELECT conform.main.mask_card('4111-1111-1111-1111')",
+        },
+        {
+            "description": "Format-check a US postal (ZIP) code.",
+            "sql": "SELECT conform.main.is_valid_postal_code('90210', 'US')",
+        },
+        {
+            "description": "List every recognized payment-card brand.",
+            "sql": "SELECT * FROM conform.main.card_brands() ORDER BY brand",
+        },
+    ]
 )
 
 
@@ -189,9 +247,9 @@ _PHONE_REGIONS_DOC_MD = (
     "Discovery table of every phone region the worker understands, exposed as a regular table you "
     "can read without parentheses.\n\n"
     "## Columns\n\n"
-    "- `region` (VARCHAR, primary key) -- ISO-3166 alpha-2 region code (the optional `region` "
+    "- `region` (`VARCHAR`, primary key) -- ISO-3166 alpha-2 region code (the optional `region` "
     "argument to the phone functions).\n"
-    "- `country_code` (INTEGER) -- international dialling (country calling) code.\n\n"
+    "- `country_code` (`INTEGER`) -- international dialling (country calling) code.\n\n"
     "Read it directly to discover valid region values or look up a dialling code; see the "
     "table's example queries for ready-to-run SQL."
 )
@@ -206,12 +264,33 @@ _CARD_BRANDS_DOC_LLM = (
     "identically-named table function."
 )
 
+_POSTAL_COUNTRIES_DOC_LLM = (
+    "## `supported_postal_countries` (table)\n\n"
+    "One row per country whose postal-code format `is_valid_postal_code(text, country)` can "
+    "check. Single column:\n\n"
+    "- `country` (`VARCHAR`, primary key) -- the ISO-3166 alpha-2 code you pass as the `country` "
+    "argument to `is_valid_postal_code` (e.g. `US`, `CA`, `GB`, `DE`).\n\n"
+    "Coverage is intentionally modest. Because `is_valid_postal_code` **raises** on an "
+    "unsupported country, read (or join against) this table to confirm a country is supported "
+    "before validating. Backed by the identically-named table function."
+)
+
+_POSTAL_COUNTRIES_DOC_MD = (
+    "# `supported_postal_countries`\n\n"
+    "Discovery table of every country `is_valid_postal_code()` can format-check, exposed as a "
+    "regular table you can read without parentheses.\n\n"
+    "## Columns\n\n"
+    "- `country` (`VARCHAR`, primary key) -- ISO-3166 alpha-2 code, e.g. `US`, `CA`, `GB`.\n\n"
+    "Read it directly to discover the supported countries before calling "
+    "`is_valid_postal_code(text, country)`."
+)
+
 _CARD_BRANDS_DOC_MD = (
     "# `card_brands`\n\n"
     "Discovery table of every brand `card_brand()` can return, exposed as a regular table you can "
     "read without parentheses.\n\n"
     "## Columns\n\n"
-    "- `brand` (VARCHAR, primary key) -- e.g. `visa`, `mastercard`, `amex`, `discover`, `diners`, "
+    "- `brand` (`VARCHAR`, primary key) -- e.g. `visa`, `mastercard`, `amex`, `discover`, `diners`, "
     "`jcb`.\n\n"
     "Read it directly to enumerate the recognized brands; see the table's example queries for "
     "ready-to-run SQL."
@@ -418,6 +497,12 @@ _AGENT_TEST_TASKS_JSON = json.dumps(
             "reference_sql": "SELECT conform.main.is_valid_postal_code('90210', 'US')",
             "ignore_column_names": True,
         },
+        {
+            "name": "postal-countries-count",
+            "prompt": "How many countries does the worker's postal-code validator support?",
+            "reference_sql": "SELECT count(*) FROM conform.main.supported_postal_countries()",
+            "ignore_column_names": True,
+        },
     ]
 )
 
@@ -451,6 +536,41 @@ _DISCOVERY_TABLES: list[Table] = [
                     {
                         "description": "Look up the UK's international dialling code.",
                         "sql": "SELECT country_code FROM conform.main.supported_phone_regions WHERE region = 'GB'",
+                    },
+                ]
+            ),
+        },
+    ),
+    Table(
+        name="supported_postal_countries",
+        function=SupportedPostalCountriesFunction,
+        comment="Every country is_valid_postal_code() understands, one per row (discovery table).",
+        primary_key=(("country",),),
+        not_null=("country",),
+        column_comments={
+            "country": "ISO-3166 alpha-2 country code accepted as the `country` argument to `is_valid_postal_code`.",
+        },
+        tags={
+            "vgi.title": "Supported Postal Countries Table",
+            "vgi.doc_llm": _POSTAL_COUNTRIES_DOC_LLM,
+            "vgi.doc_md": _POSTAL_COUNTRIES_DOC_MD,
+            "vgi.keywords": keywords_json(
+                "postal code, zip code, postcode, countries, supported countries, country, discovery"
+            ),
+            "vgi.category": "postal",
+            "domain": "data-quality",
+            "vgi.example_queries": json.dumps(
+                [
+                    {
+                        "description": "List every supported postal-code country in order.",
+                        "sql": "SELECT country FROM conform.main.supported_postal_countries ORDER BY country",
+                    },
+                    {
+                        "description": "Confirm US postal codes are supported before validating.",
+                        "sql": (
+                            "SELECT count(*) > 0 AS supported "
+                            "FROM conform.main.supported_postal_countries WHERE country = 'US'"
+                        ),
                     },
                 ]
             ),

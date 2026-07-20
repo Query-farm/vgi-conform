@@ -58,11 +58,13 @@ The split follows what the VGI SDK allows for each function shape:
   ```
 
 * **Table functions** return *many* rows (here, discovery / reference data):
-  `supported_phone_regions()` and `card_brands()`.
+  `supported_phone_regions()`, `card_brands()`, and
+  `supported_postal_countries()`.
 
   ```sql
   SELECT * FROM conform.supported_phone_regions() ORDER BY region;
   SELECT * FROM conform.card_brands() ORDER BY brand;
+  SELECT * FROM conform.supported_postal_countries() ORDER BY country;
   ```
 
 **NULL semantics.** A NULL input yields NULL output for every function.
@@ -98,6 +100,7 @@ country** (see Postal codes below).
 | `is_valid_postal_code` | scalar | `(text, country)` | `BOOLEAN` (raises on unknown country) |
 | `supported_phone_regions` | table | `()` | `(region VARCHAR, country_code INT)` |
 | `card_brands` | table | `()` | `(brand VARCHAR)` |
+| `supported_postal_countries` | table | `()` | `(country VARCHAR)` |
 
 The phone `region` default is `'US'`. The VAT `country` overload validates the
 *national* (unprefixed) number via `stdnum.<cc>.vat`; the no-`country` form
@@ -181,6 +184,13 @@ SELECT is_valid_postal_code('SW1A 1AA', 'GB');  -- true
 SELECT is_valid_postal_code('1234', 'ZZ');      -- ERROR: unsupported postal-code country 'ZZ'
 ```
 
+Because an unknown country raises, use the `supported_postal_countries()`
+discovery table to see (or join against) the supported set before validating:
+
+```sql
+SELECT * FROM conform.supported_postal_countries() ORDER BY country;
+```
+
 ## Dependencies & licensing
 
 | Component | License | Notes |
@@ -238,7 +248,7 @@ Makefile                 test / test-unit / test-sql targets
 vgi_conform/
   validators.py          pure validation + normalization logic (no Arrow/VGI)
   scalars.py             per-row scalars (arity overloads for region/country)
-  tables.py              discovery table functions: supported_phone_regions, card_brands
+  tables.py              discovery table functions: supported_phone_regions, card_brands, supported_postal_countries
   schema_utils.py        Arrow field/comment helper
 tests/
   harness.py             in-process bind→init→process driver

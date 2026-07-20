@@ -7,7 +7,7 @@ Contributor/agent notes. User-facing docs live in `README.md`; this is the
 
 A [VGI](https://query.farm) worker that validates **and** normalizes real-world
 structured-data fields — **email, phone, IBAN, VAT, credit card, URL, postal
-code** — as DuckDB scalar functions, plus two discovery table functions. Backed
+code** — as DuckDB scalar functions, plus three discovery table functions. Backed
 by `phonenumbers` (Apache-2.0), `python-stdnum` (**LGPL-2.1** — see below), and
 `email-validator` (CC0). `conform_worker.py` assembles every function into one
 `conform` catalog (single `main` schema) over stdio. Sibling style/tooling to
@@ -20,7 +20,7 @@ conform_worker.py      repo-root stdio entry point; PEP 723 inline deps; main()
 vgi_conform/
   validators.py        pure validation/normalization logic; no Arrow/VGI; unit-testable
   scalars.py           per-row scalars (arity overloads for region/country)
-  tables.py            discovery table functions: supported_phone_regions, card_brands
+  tables.py            discovery table functions: supported_phone_regions, card_brands, supported_postal_countries
   schema_utils.py      pa.Field comment / column-doc helper
 tests/                 pytest: test_validators (pure), test_tables (in-proc), test_scalars (Client RPC)
 test/sql/*.test        haybarn-unittest sqllogictest — authoritative E2E

@@ -1,13 +1,19 @@
 """Integration tests for the conform discovery table functions.
 
-Drives ``supported_phone_regions`` and ``card_brands`` through the real
-bind -> init -> process lifecycle in-process (no worker subprocess). The
-per-row functions are *scalars* and are covered in ``test_scalars.py``.
+Drives ``supported_phone_regions``, ``card_brands``, and
+``supported_postal_countries`` through the real bind -> init -> process
+lifecycle in-process (no worker subprocess). The per-row functions are
+*scalars* and are covered in ``test_scalars.py``.
 """
 
 from __future__ import annotations
 
-from vgi_conform.tables import CardBrandsFunction, SupportedPhoneRegionsFunction
+from vgi_conform import validators
+from vgi_conform.tables import (
+    CardBrandsFunction,
+    SupportedPhoneRegionsFunction,
+    SupportedPostalCountriesFunction,
+)
 
 from .harness import invoke_table_function
 
@@ -48,3 +54,16 @@ class TestCardBrands:
             "mastercard",
             "visa",
         ]
+
+
+class TestSupportedPostalCountries:
+    def test_columns_and_matches_validators(self) -> None:
+        table = invoke_table_function(SupportedPostalCountriesFunction)
+        assert table.column_names == ["country"]
+        assert table.column("country").to_pylist() == validators.supported_postal_countries()
+
+    def test_known_countries_present_and_sorted(self) -> None:
+        table = invoke_table_function(SupportedPostalCountriesFunction)
+        countries = table.column("country").to_pylist()
+        assert countries == sorted(countries)
+        assert {"US", "CA", "GB"} <= set(countries)
