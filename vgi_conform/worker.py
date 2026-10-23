@@ -332,69 +332,48 @@ _CATEGORIES_JSON = json.dumps(
 )
 
 # VGI152/VGI407: the agent-suitability suite (`vgi-lint simulate`). Each task is a
-# {name, prompt} object; `reference_sql` is a grader-only canonical solution and is
-# never shown to the analyst. Prompts are natural-language and self-contained; every
-# reference matches a documented example, so the suite is sound and deterministic.
-# Each task answers with a single scalar value, so grading compares VALUES only
-# (`ignore_column_names`) -- the analyst's auto-generated column label need not
-# match the reference's.
+# public {name, prompt} object; prompts are natural-language and self-contained.
+# VGI416: the grader-only fields (`reference_sql`, `ignore_column_names`) live in
+# the private `vgi-agent-tests.yaml` sidecar at the repo root, never in metadata.
 _AGENT_TEST_TASKS_JSON = json.dumps(
     [
         # --- email ---
         {
             "name": "validate-email",
             "prompt": "Is 'a@b.com' a syntactically valid email address? Return the boolean.",
-            "reference_sql": "SELECT conform.main.is_valid_email('a@b.com')",
-            "ignore_column_names": True,
         },
         {
             "name": "normalize-email",
             "prompt": "Normalize the email address 'Test@Example.COM' to its canonical form.",
-            "reference_sql": "SELECT conform.main.normalize_email('Test@Example.COM')",
-            "ignore_column_names": True,
         },
         {
             "name": "email-domain",
             "prompt": "Extract just the domain part of the email address 'a@Example.com'.",
-            "reference_sql": "SELECT conform.main.email_domain('a@Example.com')",
-            "ignore_column_names": True,
         },
         # --- phone ---
         {
             "name": "validate-phone-us",
             "prompt": "Is '202-456-1111' a valid US phone number? Return the boolean.",
-            "reference_sql": "SELECT conform.main.is_valid_phone('202-456-1111')",
-            "ignore_column_names": True,
         },
         {
             "name": "phone-e164-gb",
             "prompt": "Format the UK phone number '07911 123456' as a canonical E.164 string.",
-            "reference_sql": "SELECT conform.main.format_phone_e164('07911 123456', 'GB')",
-            "ignore_column_names": True,
         },
         {
             "name": "phone-national-us",
             "prompt": "Format the US phone number '2024561111' in national display form.",
-            "reference_sql": "SELECT conform.main.format_phone_national('2024561111')",
-            "ignore_column_names": True,
         },
         {
             "name": "phone-international-us",
             "prompt": "Format the US phone number '202-456-1111' in international display form.",
-            "reference_sql": "SELECT conform.main.format_phone_international('202-456-1111')",
-            "ignore_column_names": True,
         },
         {
             "name": "phone-region",
             "prompt": "Which ISO region does the phone number '+12024561111' belong to?",
-            "reference_sql": "SELECT conform.main.phone_region('+12024561111')",
-            "ignore_column_names": True,
         },
         {
             "name": "phone-type-gb-mobile",
             "prompt": "What line type is the UK phone number '07911 123456' (parsed for the UK)?",
-            "reference_sql": "SELECT conform.main.phone_type('07911 123456', 'GB')",
-            "ignore_column_names": True,
         },
         {
             "name": "phone-regions-gb-dialling-code",
@@ -402,97 +381,67 @@ _AGENT_TEST_TASKS_JSON = json.dumps(
                 "Using the worker's list of supported phone regions, what is the United Kingdom's "
                 "international dialling (country calling) code?"
             ),
-            "reference_sql": ("SELECT country_code FROM conform.main.supported_phone_regions() WHERE region = 'GB'"),
-            "ignore_column_names": True,
         },
         # --- iban ---
         {
             "name": "validate-iban",
             "prompt": "Check whether 'GB82 WEST 1234 5698 7654 32' is a valid IBAN. Return the boolean.",
-            "reference_sql": "SELECT conform.main.is_valid_iban('GB82 WEST 1234 5698 7654 32')",
-            "ignore_column_names": True,
         },
         {
             "name": "format-iban",
             "prompt": "Pretty-print the IBAN 'GB82WEST12345698765432' into space-separated blocks of four.",
-            "reference_sql": "SELECT conform.main.format_iban('GB82WEST12345698765432')",
-            "ignore_column_names": True,
         },
         {
             "name": "iban-country",
             "prompt": "Which country does the IBAN 'DE89370400440532013000' belong to? Return the two-letter code.",
-            "reference_sql": "SELECT conform.main.iban_country('DE89370400440532013000')",
-            "ignore_column_names": True,
         },
         # --- vat ---
         {
             "name": "validate-vat",
             "prompt": "Is 'DE136695976' a valid country-prefixed EU VAT number? Return the boolean.",
-            "reference_sql": "SELECT conform.main.is_valid_vat('DE136695976')",
-            "ignore_column_names": True,
         },
         {
             "name": "format-vat",
             "prompt": "Normalize the EU VAT number 'DE 136 695 976' to its compact canonical form.",
-            "reference_sql": "SELECT conform.main.format_vat('DE 136 695 976')",
-            "ignore_column_names": True,
         },
         # --- card ---
         {
             "name": "validate-card-luhn",
             "prompt": "Does the card number '4111 1111 1111 1111' pass the Luhn checksum? Return the boolean.",
-            "reference_sql": "SELECT conform.main.is_valid_card('4111 1111 1111 1111')",
-            "ignore_column_names": True,
         },
         {
             "name": "card-brand",
             "prompt": "What payment-card brand is the number '4111111111111111'?",
-            "reference_sql": "SELECT conform.main.card_brand('4111111111111111')",
-            "ignore_column_names": True,
         },
         {
             "name": "mask-card",
             "prompt": "Mask the card number '4111-1111-1111-1111', keeping only the last four digits visible.",
-            "reference_sql": "SELECT conform.main.mask_card('4111-1111-1111-1111')",
-            "ignore_column_names": True,
         },
         {
             "name": "card-brands-count",
             "prompt": "How many distinct payment-card brands does the worker recognize?",
-            "reference_sql": "SELECT count(*) FROM conform.main.card_brands()",
-            "ignore_column_names": True,
         },
         # --- url ---
         {
             "name": "validate-url",
             "prompt": "Is 'https://example.com/path' a valid absolute URL? Return the boolean.",
-            "reference_sql": "SELECT conform.main.is_valid_url('https://example.com/path')",
-            "ignore_column_names": True,
         },
         {
             "name": "normalize-url",
             "prompt": "Normalize the URL 'HTTP://Example.com:80/Path' to its canonical form.",
-            "reference_sql": "SELECT conform.main.normalize_url('HTTP://Example.com:80/Path')",
-            "ignore_column_names": True,
         },
         {
             "name": "url-host",
             "prompt": "Extract the host (domain) from the URL 'https://WWW.Example.com/a'.",
-            "reference_sql": "SELECT conform.main.url_host('https://WWW.Example.com/a')",
-            "ignore_column_names": True,
         },
         # --- postal ---
         {
             "name": "postal-us",
             "prompt": "Is '90210' a well-formed United States postal code? Return the boolean.",
-            "reference_sql": "SELECT conform.main.is_valid_postal_code('90210', 'US')",
-            "ignore_column_names": True,
         },
         {
             "name": "postal-countries-count",
             "prompt": "How many countries does the worker's postal-code validator support?",
-            "reference_sql": "SELECT count(*) FROM conform.main.supported_postal_countries()",
-            "ignore_column_names": True,
         },
     ]
 )
@@ -624,7 +573,7 @@ _CONFORM_CATALOG = Catalog(
     source_url="https://github.com/Query-farm/vgi-conform",
     schemas=[
         Schema(
-            name="main",
+            path=["main"],
             comment="Field validation, normalization, and discovery functions for the conform catalog",
             tags={
                 "vgi.title": "Conform — main schema",
