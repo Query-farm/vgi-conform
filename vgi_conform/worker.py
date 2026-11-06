@@ -31,7 +31,7 @@ import json
 from collections import defaultdict
 
 from vgi import Worker
-from vgi.catalog import Catalog, Schema, Table
+from vgi.catalog import Catalog, ConstraintInfo, Schema, Table, constraint_record
 from vgi.metadata import FunctionExample
 
 from vgi_conform.meta import keywords_json
@@ -446,13 +446,39 @@ _AGENT_TEST_TASKS_JSON = json.dumps(
     ]
 )
 
+
+def _trusted(table: str, constraint_id: str, kind: str, columns: list[list[str]]) -> ConstraintInfo:
+    """Build an ENFORCED + ALL_ROWS constraint record for a ``main``-schema discovery table.
+
+    vgi.v3 drops the legacy ``primary_key=`` / ``not_null=`` Table fields: the worker
+    attests constraints with canonical records instead. A PRIMARY_KEY record also makes
+    its columns NOT NULL, so only non-key required columns need a NOT_NULL record. The
+    discovery tables are generated from static library data, so every row satisfies
+    these keys (that is what ENFORCED + ALL_ROWS attests).
+
+    Args:
+        table: Owning table name.
+        constraint_id: Stable provider-owned constraint id, unique within the table.
+        kind: ``"PRIMARY_KEY"`` or ``"NOT_NULL"``.
+        columns: Raw column paths, e.g. ``[["region"]]``.
+
+    Returns:
+        The canonical constraint record.
+    """
+    return constraint_record(
+        ["main"], table, constraint_id, kind, columns, enforcement="ENFORCED", validation="ALL_ROWS"
+    )
+
+
 _DISCOVERY_TABLES: list[Table] = [
     Table(
         name="supported_phone_regions",
         function=SupportedPhoneRegionsFunction,
         comment="Every (region, country_code) the phone functions understand (discovery table).",
-        primary_key=(("region",),),
-        not_null=("region", "country_code"),
+        constraints=(
+            _trusted("supported_phone_regions", "pk", "PRIMARY_KEY", [["region"]]),
+            _trusted("supported_phone_regions", "country_code_not_null", "NOT_NULL", [["country_code"]]),
+        ),
         column_comments={
             "region": "ISO-3166 alpha-2 region code (the optional `region` argument to the phone functions).",
             "country_code": "International dialling (country calling) code.",
@@ -485,8 +511,7 @@ _DISCOVERY_TABLES: list[Table] = [
         name="supported_postal_countries",
         function=SupportedPostalCountriesFunction,
         comment="Every country is_valid_postal_code() understands, one per row (discovery table).",
-        primary_key=(("country",),),
-        not_null=("country",),
+        constraints=(_trusted("supported_postal_countries", "pk", "PRIMARY_KEY", [["country"]]),),
         column_comments={
             "country": "ISO-3166 alpha-2 country code accepted as the `country` argument to `is_valid_postal_code`.",
         },
@@ -520,8 +545,7 @@ _DISCOVERY_TABLES: list[Table] = [
         name="card_brands",
         function=CardBrandsFunction,
         comment="The brands card_brand() can return, one per row (discovery table).",
-        primary_key=(("brand",),),
-        not_null=("brand",),
+        constraints=(_trusted("card_brands", "pk", "PRIMARY_KEY", [["brand"]]),),
         column_comments={
             "brand": "A brand `card_brand()` can return, e.g. `visa`, `mastercard`, `amex`.",
         },
