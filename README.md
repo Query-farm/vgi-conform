@@ -21,7 +21,7 @@ battle-tested libraries: [`phonenumbers`](https://pypi.org/project/phonenumbers/
 
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
-ATTACH 'conform' (TYPE vgi, LOCATION 'uv run conform_worker.py');
+ATTACH 'conform' (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-conform@v0.2.0 vgi-conform-worker');
 
 SELECT conform.is_valid_email('a@b.com');                  -- true
 SELECT conform.normalize_email('Test@Example.COM');        -- 'test@example.com'
@@ -39,6 +39,39 @@ SELECT conform.is_valid_postal_code('90210', 'US');        -- true
 Everything runs **offline and deterministically** — there are no network or DNS
 lookups (email validation is syntactic + normalizing only), so the worker is
 fast and hermetic, and the same input always gives the same answer.
+
+## Quick start
+
+The worker isn't on PyPI; [uv](https://docs.astral.sh/uv/) runs it straight from a tagged release on GitHub. `uvx` builds an isolated environment on the first ATTACH and reuses it afterwards:
+
+```sql
+INSTALL vgi FROM community;
+LOAD vgi;
+
+ATTACH 'conform' AS conform (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-conform@v0.2.0 vgi-conform-worker');
+
+-- Check whether a string is a syntactically valid email address.
+SELECT conform.main.is_valid_email('a@b.com');
+
+-- Canonicalize an email address (lower-cased domain) for deduplication.
+SELECT conform.main.normalize_email('Test@Example.COM');
+```
+
+Change `@v0.2.0` to move to a newer release.
+
+### Other ways to run it
+
+- **Docker** (the image bundles the worker and its dependencies):
+
+  ```sql
+  ATTACH 'conform' AS conform (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-conform:0.2.0');
+  ```
+
+- **From a local checkout** (`git clone https://github.com/Query-farm/vgi-conform`), point `LOCATION` at `uv run --project /path/to/vgi-conform vgi-conform-worker`.
+
+### Build from source
+
+To build the worker yourself, see [Local development](#local-development).
 
 ## Scalars (per-row) vs. table functions (discovery)
 
