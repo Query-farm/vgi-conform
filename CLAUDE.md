@@ -120,7 +120,7 @@ uv run ruff check . && uv run mypy vgi_conform/
 conform_worker.py"`, puts `~/.local/bin` on PATH, and runs `haybarn-unittest
 --keep-home --test-dir . "test/sql/*"`. Install the runner once with
 `uv tool install --prerelease allow 'haybarn-unittest>=2.0.0rc11,<2.1'` (haybarn 2.0 is
-required: the worker is on vgi-python 0.49 / VGI protocol vgi.v3 3.1, which only the
+required: the worker is on vgi-python 0.50 / VGI protocol vgi.v3 3.2, which only the
 haybarn 2.0 community `vgi` extension accepts; the runner needs `--keep-home`).
 CI (`.github/workflows/ci.yml`) runs unit +
 lint + a gated `e2e` job that installs haybarn-unittest and runs `make test-sql`.
