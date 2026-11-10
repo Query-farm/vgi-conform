@@ -578,7 +578,12 @@ _CONFORM_CATALOG = Catalog(
     default_schema="main",
     comment="Validate + normalize phone/email/IBAN/VAT/card/URL/postal fields for SQL",
     tags={
-        "vgi.title": "Field Validation & Normalization (conform)",
+        "vgi.title": "Field Validation",
+        # VGI148: one-sentence listing blurb shown under the title.
+        "vgi.subtitle": (
+            "Check and standardize phone numbers, emails, IBANs, EU VAT numbers, card numbers, "
+            "URLs and postal codes offline, with no external service."
+        ),
         # VGI138: keywords must be a JSON array of strings, not comma-separated.
         "vgi.keywords": keywords_json(
             "validate, normalize, conform, data cleaning, data quality, email, phone, "
@@ -600,7 +605,7 @@ _CONFORM_CATALOG = Catalog(
             path=["main"],
             comment="Field validation, normalization, and discovery functions for the conform catalog",
             tags={
-                "vgi.title": "Conform — main schema",
+                "vgi.title": "Validators & Formatters",
                 # VGI138: keywords must be a JSON array of strings, not comma-separated.
                 "vgi.keywords": keywords_json(
                     "validate, normalize, email, phone, IBAN, VAT, credit card, URL, "
