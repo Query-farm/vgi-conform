@@ -21,7 +21,7 @@ battle-tested libraries: [`phonenumbers`](https://pypi.org/project/phonenumbers/
 
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
-ATTACH 'conform' (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-conform@v0.2.0 vgi-conform-worker');
+ATTACH 'conform' (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-conform@v0.3.0 vgi-conform-worker');
 
 SELECT conform.is_valid_email('a@b.com');                  -- true
 SELECT conform.normalize_email('Test@Example.COM');        -- 'test@example.com'
@@ -48,7 +48,7 @@ The worker isn't on PyPI; [uv](https://docs.astral.sh/uv/) runs it straight from
 INSTALL vgi FROM community;
 LOAD vgi;
 
-ATTACH 'conform' AS conform (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-conform@v0.2.0 vgi-conform-worker');
+ATTACH 'conform' AS conform (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-conform@v0.3.0 vgi-conform-worker');
 
 -- Check whether a string is a syntactically valid email address.
 SELECT conform.main.is_valid_email('a@b.com');
@@ -57,14 +57,14 @@ SELECT conform.main.is_valid_email('a@b.com');
 SELECT conform.main.normalize_email('Test@Example.COM');
 ```
 
-Change `@v0.2.0` to move to a newer release.
+Change `@v0.3.0` to move to a newer release.
 
 ### Other ways to run it
 
 - **Docker** (the image bundles the worker and its dependencies):
 
   ```sql
-  ATTACH 'conform' AS conform (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-conform:0.2.0');
+  ATTACH 'conform' AS conform (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-conform:0.3.0');
   ```
 
 - **From a local checkout** (`git clone https://github.com/Query-farm/vgi-conform`), point `LOCATION` at `uv run --project /path/to/vgi-conform vgi-conform-worker`.
