@@ -40,6 +40,11 @@ Everything runs **offline and deterministically** — there are no network or DN
 lookups (email validation is syntactic + normalizing only), so the worker is
 fast and hermetic, and the same input always gives the same answer.
 
+## Executed notebooks
+
+See [the SQL and visualization examples](notebooks/README.md) for a portable,
+executed walkthrough of contact-field validation, normalization and phone context.
+
 ## Quick start
 
 The worker isn't on PyPI; [uv](https://docs.astral.sh/uv/) runs it straight from a tagged release on GitHub. `uvx` builds an isolated environment on the first ATTACH and reuses it afterwards:
