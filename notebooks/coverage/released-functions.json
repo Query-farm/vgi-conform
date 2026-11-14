@@ -1,0 +1,1289 @@
+{
+  "query": "SELECT * FROM duckdb_functions() WHERE database_name='conform' ORDER BY schema_name,function_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "function_name",
+    "alias_of",
+    "function_type",
+    "description",
+    "comment",
+    "tags",
+    "return_type",
+    "parameters",
+    "parameter_types",
+    "varargs",
+    "macro_definition",
+    "has_side_effects",
+    "internal",
+    "extension_name",
+    "function_oid",
+    "examples",
+    "stability",
+    "categories"
+  ],
+  "rows": [
+    [
+      "conform",
+      "22592",
+      "main",
+      "card_brand",
+      null,
+      "scalar",
+      "Card brand (visa/mastercard/amex/discover/diners/jcb) by prefix+length, or NULL",
+      null,
+      {
+        "vgi.category": "card",
+        "vgi.doc_llm": "## `card_brand(text)`\n\nReturns `VARCHAR`: the card **brand** -- one of `visa`, `mastercard`, `amex`, `discover`, `diners`, `jcb` -- inferred from the IIN/BIN prefix and length, or `NULL` when the number matches no known brand or is `NULL`. Separators are ignored.\n\nClassification is by prefix+length only and does **not** require a passing Luhn checksum (so malformed PANs can still be tagged); use `is_valid_card` for the checksum. See `card_brands()` for the full brand list.",
+        "vgi.doc_md": "# `card_brand`\n\nIdentify a card's brand from its prefix and length.\n\n## Usage\n\n```sql\nSELECT conform.card_brand('4111111111111111');  -- 'visa'\n```\n\n## Notes\n\n- Prefix+length only; independent of the Luhn check.\n- `card_brands()` lists every brand this can return.",
+        "vgi.example_queries": "[{\"description\": \"Detect the card brand\", \"sql\": \"SELECT conform.main.card_brand('4111111111111111')\"}]",
+        "vgi.keywords": "[\"credit card\", \"card brand\", \"visa\", \"mastercard\", \"amex\", \"discover\", \"jcb\", \"iin\", \"bin\", \"payment\"]",
+        "vgi.title": "Detect Card Brand"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22596,
+      [
+        "SELECT conform.main.card_brand('4111111111111111')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "card"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "card_brands",
+      null,
+      "table",
+      "The brands card_brand() can return (visa, mastercard, amex, ...)",
+      null,
+      {
+        "vgi.category": "card",
+        "vgi.doc_llm": "## `card_brands()`\n\nA **table function** (no arguments) returning one row per card brand the `card_brand` scalar can emit, with a single column:\n\n- `brand` (`VARCHAR`) -- a brand name such as `visa`, `mastercard`, `amex`, `discover`, `diners`, `jcb`.\n\nUse it to enumerate the recognized brands -- e.g. to populate a UI filter or to validate that a `card_brand(...)` result is within the known set.",
+        "vgi.doc_md": "# `card_brands`\n\nDiscovery table of every brand `card_brand()` can return.\n\n## Columns\n\n- `brand` (`VARCHAR`) -- e.g. `visa`, `mastercard`, `amex`.",
+        "vgi.example_queries": "[{\"description\": \"Count the recognized card brands\", \"sql\": \"SELECT count(*) AS brand_count FROM conform.main.card_brands()\"}]",
+        "vgi.keywords": "[\"credit card\", \"card brands\", \"visa\", \"mastercard\", \"amex\", \"discover\", \"jcb\", \"discovery\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"brand\", \"type\": \"VARCHAR\", \"description\": \"A brand `card_brand()` can return, e.g. `visa`, `mastercard`, `amex`.\"}]",
+        "vgi.title": "List Recognized Card Brands"
+      },
+      null,
+      [],
+      [],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22617,
+      [
+        "SELECT count(*) AS brand_count FROM conform.main.card_brands()"
+      ],
+      null,
+      [
+        "conform",
+        "card"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "email_domain",
+      null,
+      "scalar",
+      "The (normalized) domain part of an email address, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "email",
+        "vgi.doc_llm": "## `email_domain(text)`\n\nReturns `VARCHAR`: the **domain** portion (everything after the `@`), lower-cased / normalized, of a valid email address; `NULL` for invalid or `NULL` input.\n\nUse it to group or count addresses by provider/organization (`GROUP BY conform.email_domain(email)`), spot disposable-domain patterns, or route by domain. Offline -- no DNS.",
+        "vgi.doc_md": "# `email_domain`\n\nExtract the (normalized) domain part of an email address.\n\n## Usage\n\n```sql\nSELECT conform.email_domain('a@Example.com');  -- 'example.com'\n```\n\n## Notes\n\n- Returns `NULL` when the address is invalid or `NULL`.",
+        "vgi.example_queries": "[{\"description\": \"Extract the email domain\", \"sql\": \"SELECT conform.main.email_domain('a@Example.com')\"}]",
+        "vgi.keywords": "[\"email\", \"domain\", \"email domain\", \"host\", \"provider\", \"group by domain\"]",
+        "vgi.title": "Extract Email Domain"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22597,
+      [
+        "SELECT conform.main.email_domain('a@Example.com')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "email"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "format_iban",
+      null,
+      "scalar",
+      "IBAN grouped into space-separated blocks of four, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "iban",
+        "vgi.doc_llm": "## `format_iban(text)`\n\nReturns `VARCHAR`: a valid IBAN grouped into space-separated blocks of four (the standard human-readable presentation, e.g. `'GB82 WEST 1234 5698 7654 32'`), or `NULL` when the IBAN is invalid or `NULL`.\n\nBecause it returns `NULL` for invalid input, `format_iban` doubles as a validate-and-prettify step. For storage keep the compact form; use this only for display.",
+        "vgi.doc_md": "# `format_iban`\n\nPretty-print a valid IBAN in blocks of four.\n\n## Usage\n\n```sql\nSELECT conform.format_iban('GB82WEST12345698765432');\n-- 'GB82 WEST 1234 5698 7654 32'\n```\n\n## Notes\n\n- Returns `NULL` for invalid input (validate + format in one).",
+        "vgi.example_queries": "[{\"description\": \"Pretty-print an IBAN\", \"sql\": \"SELECT conform.main.format_iban('GB82WEST12345698765432')\"}]",
+        "vgi.keywords": "[\"iban\", \"format iban\", \"pretty print iban\", \"bank account\", \"display iban\", \"banking\"]",
+        "vgi.title": "Format IBAN For Display"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22598,
+      [
+        "SELECT conform.main.format_iban('GB82WEST12345698765432')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "iban"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "format_phone_e164",
+      null,
+      "scalar",
+      "Format a phone number as E.164, e.g. '+12024561111' (region defaults to 'US')",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `format_phone_e164(text, region)`\n\nReturns `VARCHAR`: the number in **E.164** form, parsing `text` with the explicit `region` (ISO-3166 alpha-2, e.g. `'GB'`), or `NULL` when invalid or `NULL`.\n\nUse this overload to canonicalize non-US numbers. `region` is a constant. E.164 is the recommended storage form.",
+        "vgi.doc_md": "# `format_phone_e164` (with region)\n\nFormat a phone number into E.164, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.format_phone_e164('07911 123456', 'GB');  -- '+447911123456'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant; `NULL`/invalid yields `NULL`.",
+        "vgi.example_queries": "[{\"description\": \"Format a US phone number as E.164\", \"sql\": \"SELECT conform.main.format_phone_e164('202-456-1111')\"}, {\"description\": \"Format a UK phone number as E.164\", \"sql\": \"SELECT conform.main.format_phone_e164('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"e164\", \"e.164\", \"format phone\", \"region\", \"country\", \"normalize phone number\"]",
+        "vgi.title": "Format Phone As E.164 In Region"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22599,
+      [
+        "SELECT conform.main.format_phone_e164('202-456-1111')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "format_phone_e164",
+      null,
+      "scalar",
+      "Format a phone number as E.164 in a given region (NULL if invalid)",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `format_phone_e164(text, region)`\n\nReturns `VARCHAR`: the number in **E.164** form, parsing `text` with the explicit `region` (ISO-3166 alpha-2, e.g. `'GB'`), or `NULL` when invalid or `NULL`.\n\nUse this overload to canonicalize non-US numbers. `region` is a constant. E.164 is the recommended storage form.",
+        "vgi.doc_md": "# `format_phone_e164` (with region)\n\nFormat a phone number into E.164, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.format_phone_e164('07911 123456', 'GB');  -- '+447911123456'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant; `NULL`/invalid yields `NULL`.",
+        "vgi.example_queries": "[{\"description\": \"Format a US phone number as E.164\", \"sql\": \"SELECT conform.main.format_phone_e164('202-456-1111')\"}, {\"description\": \"Format a UK phone number as E.164\", \"sql\": \"SELECT conform.main.format_phone_e164('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"e164\", \"e.164\", \"format phone\", \"region\", \"country\", \"normalize phone number\"]",
+        "vgi.title": "Format Phone As E.164 In Region"
+      },
+      "VARCHAR",
+      [
+        "text",
+        "region"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22599,
+      [
+        "SELECT conform.main.format_phone_e164('07911 123456', 'GB')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "format_phone_international",
+      null,
+      "scalar",
+      "Format a phone number in international form in a given region (NULL if invalid)",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `format_phone_international(text, region)`\n\nReturns `VARCHAR`: the number in **international** display form, parsing `text` with the explicit `region` (ISO-3166 alpha-2, e.g. `'GB'`), or `NULL` when invalid or `NULL`.\n\nUse this overload for non-US numbers. For storage prefer `format_phone_e164`. `region` is a constant.",
+        "vgi.doc_md": "# `format_phone_international` (with region)\n\nFormat a phone number in international form, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.format_phone_international('07911 123456', 'GB');\n-- '+44 7911 123456'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant; for display, not storage.",
+        "vgi.example_queries": "[{\"description\": \"Format a US phone number in international form\", \"sql\": \"SELECT conform.main.format_phone_international('202-456-1111')\"}, {\"description\": \"Format a UK phone number in international form\", \"sql\": \"SELECT conform.main.format_phone_international('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"international format\", \"region\", \"country\", \"format phone\", \"country code\"]",
+        "vgi.title": "Format Phone In International Form By Region"
+      },
+      "VARCHAR",
+      [
+        "text",
+        "region"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22600,
+      [
+        "SELECT conform.main.format_phone_international('07911 123456', 'GB')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "format_phone_international",
+      null,
+      "scalar",
+      "Format a phone number in international form, e.g. '+1 202-456-1111' (region 'US')",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `format_phone_international(text, region)`\n\nReturns `VARCHAR`: the number in **international** display form, parsing `text` with the explicit `region` (ISO-3166 alpha-2, e.g. `'GB'`), or `NULL` when invalid or `NULL`.\n\nUse this overload for non-US numbers. For storage prefer `format_phone_e164`. `region` is a constant.",
+        "vgi.doc_md": "# `format_phone_international` (with region)\n\nFormat a phone number in international form, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.format_phone_international('07911 123456', 'GB');\n-- '+44 7911 123456'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant; for display, not storage.",
+        "vgi.example_queries": "[{\"description\": \"Format a US phone number in international form\", \"sql\": \"SELECT conform.main.format_phone_international('202-456-1111')\"}, {\"description\": \"Format a UK phone number in international form\", \"sql\": \"SELECT conform.main.format_phone_international('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"international format\", \"region\", \"country\", \"format phone\", \"country code\"]",
+        "vgi.title": "Format Phone In International Form By Region"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22600,
+      [
+        "SELECT conform.main.format_phone_international('202-456-1111')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "format_phone_national",
+      null,
+      "scalar",
+      "Format a phone number in national form in a given region (NULL if invalid)",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `format_phone_national(text, region)`\n\nReturns `VARCHAR`: the number in **national** display form, parsing `text` with the explicit `region` (ISO-3166 alpha-2, e.g. `'GB'`), or `NULL` when invalid or `NULL`.\n\nUse this overload for non-US numbers. For storage prefer `format_phone_e164`. `region` is a constant.",
+        "vgi.doc_md": "# `format_phone_national` (with region)\n\nFormat a phone number in national form, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.format_phone_national('07911 123456', 'GB');  -- '07911 123456'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant; for display, not storage.",
+        "vgi.example_queries": "[{\"description\": \"Format a US phone number in national form\", \"sql\": \"SELECT conform.main.format_phone_national('2024561111')\"}, {\"description\": \"Format a UK phone number in national form\", \"sql\": \"SELECT conform.main.format_phone_national('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"national format\", \"region\", \"country\", \"format phone\", \"display phone\"]",
+        "vgi.title": "Format Phone In National Form By Region"
+      },
+      "VARCHAR",
+      [
+        "text",
+        "region"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22601,
+      [
+        "SELECT conform.main.format_phone_national('07911 123456', 'GB')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "format_phone_national",
+      null,
+      "scalar",
+      "Format a phone number in national form, e.g. '(202) 456-1111' (region 'US')",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `format_phone_national(text, region)`\n\nReturns `VARCHAR`: the number in **national** display form, parsing `text` with the explicit `region` (ISO-3166 alpha-2, e.g. `'GB'`), or `NULL` when invalid or `NULL`.\n\nUse this overload for non-US numbers. For storage prefer `format_phone_e164`. `region` is a constant.",
+        "vgi.doc_md": "# `format_phone_national` (with region)\n\nFormat a phone number in national form, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.format_phone_national('07911 123456', 'GB');  -- '07911 123456'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant; for display, not storage.",
+        "vgi.example_queries": "[{\"description\": \"Format a US phone number in national form\", \"sql\": \"SELECT conform.main.format_phone_national('2024561111')\"}, {\"description\": \"Format a UK phone number in national form\", \"sql\": \"SELECT conform.main.format_phone_national('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"national format\", \"region\", \"country\", \"format phone\", \"display phone\"]",
+        "vgi.title": "Format Phone In National Form By Region"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22601,
+      [
+        "SELECT conform.main.format_phone_national('2024561111')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "format_vat",
+      null,
+      "scalar",
+      "Compact VAT number for a country (national form), or NULL if invalid",
+      null,
+      {
+        "vgi.category": "vat",
+        "vgi.doc_llm": "## `format_vat(text, country)`\n\nReturns `VARCHAR`: the **compact** canonical form of a **national** (unprefixed) VAT number for `country` (ISO-3166 alpha-2), or `NULL` when invalid or `NULL`.\n\nValidates against the country's VAT rules and normalizes (strip/upper). Use this overload when country is a separate column. `country` is a constant.",
+        "vgi.doc_md": "# `format_vat` (with country)\n\nNormalize a national (unprefixed) VAT number for a country.\n\n## Usage\n\n```sql\nSELECT conform.format_vat('136 695 976', 'DE');  -- '136695976'\n```\n\n## Notes\n\n- `country` is an ISO-3166 alpha-2 constant; `NULL` for invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Compact an EU VAT number\", \"sql\": \"SELECT conform.main.format_vat('DE 136 695 976')\"}, {\"description\": \"Compact a German VAT number\", \"sql\": \"SELECT conform.main.format_vat('136 695 976', 'DE')\"}]",
+        "vgi.keywords": "[\"vat\", \"format vat\", \"normalize vat\", \"country\", \"national vat\", \"tax id\"]",
+        "vgi.title": "Format VAT Number For Country"
+      },
+      "VARCHAR",
+      [
+        "text",
+        "country"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22602,
+      [
+        "SELECT conform.main.format_vat('136 695 976', 'DE')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "vat"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "format_vat",
+      null,
+      "scalar",
+      "Compact (stripped, upper-cased) EU VAT number, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "vat",
+        "vgi.doc_llm": "## `format_vat(text, country)`\n\nReturns `VARCHAR`: the **compact** canonical form of a **national** (unprefixed) VAT number for `country` (ISO-3166 alpha-2), or `NULL` when invalid or `NULL`.\n\nValidates against the country's VAT rules and normalizes (strip/upper). Use this overload when country is a separate column. `country` is a constant.",
+        "vgi.doc_md": "# `format_vat` (with country)\n\nNormalize a national (unprefixed) VAT number for a country.\n\n## Usage\n\n```sql\nSELECT conform.format_vat('136 695 976', 'DE');  -- '136695976'\n```\n\n## Notes\n\n- `country` is an ISO-3166 alpha-2 constant; `NULL` for invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Compact an EU VAT number\", \"sql\": \"SELECT conform.main.format_vat('DE 136 695 976')\"}, {\"description\": \"Compact a German VAT number\", \"sql\": \"SELECT conform.main.format_vat('136 695 976', 'DE')\"}]",
+        "vgi.keywords": "[\"vat\", \"format vat\", \"normalize vat\", \"country\", \"national vat\", \"tax id\"]",
+        "vgi.title": "Format VAT Number For Country"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22602,
+      [
+        "SELECT conform.main.format_vat('DE 136 695 976')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "vat"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "iban_country",
+      null,
+      "scalar",
+      "Two-letter country code of a valid IBAN, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "iban",
+        "vgi.doc_llm": "## `iban_country(text)`\n\nReturns `VARCHAR`: the two-letter ISO country code that prefixes a valid IBAN (e.g. `'GB'`), or `NULL` when the IBAN is invalid or `NULL`.\n\nUse it to group bank accounts by country, route SEPA vs non-SEPA, or audit that an account's country matches a customer's stated country. Validity is enforced -- a bad checksum yields `NULL`, not a spurious code.",
+        "vgi.doc_md": "# `iban_country`\n\nExtract the country code from a valid IBAN.\n\n## Usage\n\n```sql\nSELECT conform.iban_country('GB82WEST12345698765432');  -- 'GB'\n```\n\n## Notes\n\n- Returns `NULL` for invalid IBANs (checksum enforced).",
+        "vgi.example_queries": "[{\"description\": \"Country code of an IBAN\", \"sql\": \"SELECT conform.main.iban_country('GB82WEST12345698765432')\"}]",
+        "vgi.keywords": "[\"iban\", \"country\", \"country code\", \"bank account\", \"sepa\", \"banking\", \"iso country\"]",
+        "vgi.title": "IBAN Country Code"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22603,
+      [
+        "SELECT conform.main.iban_country('GB82WEST12345698765432')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "iban"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "is_valid_card",
+      null,
+      "scalar",
+      "True if the card number's digits pass the Luhn checksum",
+      null,
+      {
+        "vgi.category": "card",
+        "vgi.doc_llm": "## `is_valid_card(text)`\n\nReturns `BOOLEAN`: `true` when the card number's digits pass the **Luhn** checksum, `false` otherwise, `NULL` when `text` is `NULL`. Separators (spaces, dashes) are ignored.\n\nLuhn catches typos and many fabricated numbers but does **not** prove a card exists or is active. Note that validity is independent of brand: use `card_brand` to classify (a number can have a recognized brand yet fail Luhn, and vice versa).",
+        "vgi.doc_md": "# `is_valid_card`\n\nCheck a card number against the Luhn checksum.\n\n## Usage\n\n```sql\nSELECT conform.is_valid_card('4111 1111 1111 1111');  -- true\n```\n\n## Notes\n\n- Luhn only -- not an authorization or existence check.\n- Independent of `card_brand`.",
+        "vgi.example_queries": "[{\"description\": \"Validate a card number via Luhn\", \"sql\": \"SELECT conform.main.is_valid_card('4111 1111 1111 1111')\"}]",
+        "vgi.keywords": "[\"credit card\", \"card number\", \"luhn\", \"validate card\", \"pan\", \"payment\", \"checksum\"]",
+        "vgi.title": "Is Valid Card Number"
+      },
+      "BOOLEAN",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22604,
+      [
+        "SELECT conform.main.is_valid_card('4111 1111 1111 1111')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "card"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "is_valid_email",
+      null,
+      "scalar",
+      "True if text is a syntactically valid email address (no DNS lookup)",
+      null,
+      {
+        "vgi.category": "email",
+        "vgi.doc_llm": "## `is_valid_email(text)`\n\nReturns `BOOLEAN`: `true` when `text` is a **syntactically** valid email address, `false` when it is not, and `NULL` when `text` is `NULL`.\n\nValidation is **offline** -- it checks address syntax and normalizes the domain, but performs **no DNS or deliverability lookup**, so it is fast, deterministic, and never makes a network call.\n\nUse it to gate or filter a column of user-supplied email values (`WHERE conform.is_valid_email(email)`), or as a quality check before loading contact data. Pair with `normalize_email` to canonicalize the values you keep.",
+        "vgi.doc_md": "# `is_valid_email`\n\nTest whether a string is a syntactically valid email address.\n\n## Usage\n\n```sql\nSELECT conform.is_valid_email('a@b.com');   -- true\nSELECT conform.is_valid_email('not-email');  -- false\n```\n\n## Notes\n\n- Offline only -- no DNS / deliverability check.\n- `NULL` in yields `NULL` out; any non-`NULL` invalid value yields `false`.",
+        "vgi.example_queries": "[{\"description\": \"Valid email\", \"sql\": \"SELECT conform.main.is_valid_email('a@b.com')\"}]",
+        "vgi.keywords": "[\"email\", \"e-mail\", \"validate email\", \"is valid email\", \"email syntax\", \"address check\"]",
+        "vgi.title": "Is Valid Email Address"
+      },
+      "BOOLEAN",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22605,
+      [
+        "SELECT conform.main.is_valid_email('a@b.com')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "email"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "is_valid_iban",
+      null,
+      "scalar",
+      "True if text is a structurally valid IBAN (checksum included)",
+      null,
+      {
+        "vgi.category": "iban",
+        "vgi.doc_llm": "## `is_valid_iban(text)`\n\nReturns `BOOLEAN`: `true` when `text` is a structurally valid International Bank Account Number -- correct per-country length and a passing **mod-97 checksum** -- `false` otherwise, `NULL` when `text` is `NULL`. Spaces are tolerated.\n\nBacked by `python-stdnum`; offline and deterministic. Use it to validate bank account fields before payment processing. Pair with `format_iban` for display and `iban_country` to extract the country.",
+        "vgi.doc_md": "# `is_valid_iban`\n\nValidate an IBAN (length + mod-97 checksum).\n\n## Usage\n\n```sql\nSELECT conform.is_valid_iban('GB82 WEST 1234 5698 7654 32');  -- true\n```\n\n## Notes\n\n- Spaces tolerated; `NULL` in yields `NULL` out.",
+        "vgi.example_queries": "[{\"description\": \"Validate an IBAN\", \"sql\": \"SELECT conform.main.is_valid_iban('GB82 WEST 1234 5698 7654 32')\"}]",
+        "vgi.keywords": "[\"iban\", \"bank account\", \"validate iban\", \"checksum\", \"mod-97\", \"banking\"]",
+        "vgi.title": "Is Valid Bank IBAN"
+      },
+      "BOOLEAN",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22606,
+      [
+        "SELECT conform.main.is_valid_iban('GB82 WEST 1234 5698 7654 32')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "iban"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "is_valid_phone",
+      null,
+      "scalar",
+      "True if text is a valid phone number (region defaults to 'US')",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `is_valid_phone(text, region)`\n\nReturns `BOOLEAN`: `true` when `text` parses as a valid phone number using `region` (an ISO-3166 alpha-2 code such as `'GB'`, `'DE'`, `'IN'`) as the parse/default region, `false` when it does not, `NULL` when `text` is `NULL`.\n\nThis is the explicit-region overload of `is_valid_phone`; use it whenever the numbers are not US-format. The `region` argument is a constant. Backed by `libphonenumber`; offline and deterministic.",
+        "vgi.doc_md": "# `is_valid_phone` (with region)\n\nValidate a phone number, parsing it in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.is_valid_phone('07911 123456', 'GB');  -- true\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 code and must be a constant.",
+        "vgi.example_queries": "[{\"description\": \"Validate a US phone number\", \"sql\": \"SELECT conform.main.is_valid_phone('202-456-1111')\"}, {\"description\": \"Validate a UK phone number\", \"sql\": \"SELECT conform.main.is_valid_phone('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"telephone\", \"validate phone\", \"region\", \"country\", \"is valid phone\", \"libphonenumber\"]",
+        "vgi.title": "Is Valid Phone Number In Region"
+      },
+      "BOOLEAN",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22607,
+      [
+        "SELECT conform.main.is_valid_phone('202-456-1111')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "is_valid_phone",
+      null,
+      "scalar",
+      "True if text is a valid phone number in a given region",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `is_valid_phone(text, region)`\n\nReturns `BOOLEAN`: `true` when `text` parses as a valid phone number using `region` (an ISO-3166 alpha-2 code such as `'GB'`, `'DE'`, `'IN'`) as the parse/default region, `false` when it does not, `NULL` when `text` is `NULL`.\n\nThis is the explicit-region overload of `is_valid_phone`; use it whenever the numbers are not US-format. The `region` argument is a constant. Backed by `libphonenumber`; offline and deterministic.",
+        "vgi.doc_md": "# `is_valid_phone` (with region)\n\nValidate a phone number, parsing it in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.is_valid_phone('07911 123456', 'GB');  -- true\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 code and must be a constant.",
+        "vgi.example_queries": "[{\"description\": \"Validate a US phone number\", \"sql\": \"SELECT conform.main.is_valid_phone('202-456-1111')\"}, {\"description\": \"Validate a UK phone number\", \"sql\": \"SELECT conform.main.is_valid_phone('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"telephone\", \"validate phone\", \"region\", \"country\", \"is valid phone\", \"libphonenumber\"]",
+        "vgi.title": "Is Valid Phone Number In Region"
+      },
+      "BOOLEAN",
+      [
+        "text",
+        "region"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22607,
+      [
+        "SELECT conform.main.is_valid_phone('07911 123456', 'GB')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "is_valid_postal_code",
+      null,
+      "scalar",
+      "True if text matches a country's postal-code format (modest coverage: US, CA, GB, DE, FR, NL, AU, JP, IN, BR). Unknown country raises an error.",
+      null,
+      {
+        "vgi.category": "postal",
+        "vgi.doc_llm": "## `is_valid_postal_code(text, country)`\n\nReturns `BOOLEAN`: `true` when `text` matches the postal-code **format** for `country` (ISO-3166 alpha-2), `false` when it does not, `NULL` when `text` is `NULL`.\n\nCoverage is intentionally modest -- a per-country regex table for US, CA, GB, DE, FR, NL, AU, JP, IN, BR. This is a **format** check, not deliverability validation. An **unknown** `country` raises an error (rather than silently returning `false`) so a country typo is not mistaken for an invalid code. `country` is a required constant.",
+        "vgi.doc_md": "# `is_valid_postal_code`\n\nFormat-check a postal code for a country.\n\n## Usage\n\n```sql\nSELECT conform.is_valid_postal_code('90210', 'US');     -- true\nSELECT conform.is_valid_postal_code('K1A 0B1', 'CA');   -- true\n```\n\n## Notes\n\n- Supported: US, CA, GB, DE, FR, NL, AU, JP, IN, BR.\n- Unknown `country` raises an error (caught typos, not silent `false`).",
+        "vgi.example_queries": "[{\"description\": \"Validate a US ZIP code\", \"sql\": \"SELECT conform.main.is_valid_postal_code('90210', 'US')\"}, {\"description\": \"Validate a Canadian postal code\", \"sql\": \"SELECT conform.main.is_valid_postal_code('K1A 0B1', 'CA')\"}]",
+        "vgi.keywords": "[\"postal code\", \"zip code\", \"postcode\", \"validate postal\", \"country\", \"address\", \"format check\"]",
+        "vgi.title": "Is Valid Postal Code For Country"
+      },
+      "BOOLEAN",
+      [
+        "text",
+        "country"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22608,
+      [
+        "SELECT conform.main.is_valid_postal_code('90210', 'US')",
+        "SELECT conform.main.is_valid_postal_code('K1A 0B1', 'CA')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "postal"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "is_valid_url",
+      null,
+      "scalar",
+      "True if text is an absolute URL with a scheme and host",
+      null,
+      {
+        "vgi.category": "url",
+        "vgi.doc_llm": "## `is_valid_url(text)`\n\nReturns `BOOLEAN`: `true` when `text` is an **absolute** URL with both a scheme and a host (e.g. `https://example.com/path`), `false` otherwise, `NULL` when `text` is `NULL`.\n\nThis is a structural check -- it does not fetch the URL or verify the host resolves (offline). Relative URLs and bare hostnames return `false`. Pair with `normalize_url` / `url_host` to canonicalize or extract parts.",
+        "vgi.doc_md": "# `is_valid_url`\n\nCheck that a string is an absolute URL (scheme + host).\n\n## Usage\n\n```sql\nSELECT conform.is_valid_url('https://example.com/path');  -- true\n```\n\n## Notes\n\n- Structural only -- no network fetch. Requires scheme and host.",
+        "vgi.example_queries": "[{\"description\": \"Validate a URL\", \"sql\": \"SELECT conform.main.is_valid_url('https://example.com/path')\"}]",
+        "vgi.keywords": "[\"url\", \"uri\", \"link\", \"validate url\", \"is valid url\", \"web address\", \"http\"]",
+        "vgi.title": "Is Valid Web URL"
+      },
+      "BOOLEAN",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22609,
+      [
+        "SELECT conform.main.is_valid_url('https://example.com/path')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "url"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "is_valid_vat",
+      null,
+      "scalar",
+      "True if text is a valid EU VAT number (country-prefixed, e.g. 'DE136695976')",
+      null,
+      {
+        "vgi.category": "vat",
+        "vgi.doc_llm": "## `is_valid_vat(text, country)`\n\nReturns `BOOLEAN`: `true` when `text` is a valid **national** (unprefixed) VAT number for `country` (ISO-3166 alpha-2, e.g. `'DE'`), `false` otherwise, `NULL` when `text` is `NULL`.\n\nDispatches to the country's `stdnum.<cc>.vat` module, falling back to the EU validator over the reconstructed prefixed number when no national module exists. Use this overload when country lives in its own column. `country` is a constant. Offline -- no VIES.",
+        "vgi.doc_md": "# `is_valid_vat` (with country)\n\nValidate a national (unprefixed) VAT number for a country.\n\n## Usage\n\n```sql\nSELECT conform.is_valid_vat('136695976', 'DE');  -- true\n```\n\n## Notes\n\n- `country` is an ISO-3166 alpha-2 constant; offline validation.",
+        "vgi.example_queries": "[{\"description\": \"Validate a country-prefixed EU VAT number\", \"sql\": \"SELECT conform.main.is_valid_vat('DE136695976')\"}, {\"description\": \"Validate a German VAT number (unprefixed)\", \"sql\": \"SELECT conform.main.is_valid_vat('136695976', 'DE')\"}]",
+        "vgi.keywords": "[\"vat\", \"eu vat\", \"tax id\", \"validate vat\", \"country\", \"national vat\", \"value added tax\"]",
+        "vgi.title": "Is Valid VAT Number For Country"
+      },
+      "BOOLEAN",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22610,
+      [
+        "SELECT conform.main.is_valid_vat('DE136695976')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "vat"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "is_valid_vat",
+      null,
+      "scalar",
+      "True if text is a valid VAT number for a country (national, unprefixed form)",
+      null,
+      {
+        "vgi.category": "vat",
+        "vgi.doc_llm": "## `is_valid_vat(text, country)`\n\nReturns `BOOLEAN`: `true` when `text` is a valid **national** (unprefixed) VAT number for `country` (ISO-3166 alpha-2, e.g. `'DE'`), `false` otherwise, `NULL` when `text` is `NULL`.\n\nDispatches to the country's `stdnum.<cc>.vat` module, falling back to the EU validator over the reconstructed prefixed number when no national module exists. Use this overload when country lives in its own column. `country` is a constant. Offline -- no VIES.",
+        "vgi.doc_md": "# `is_valid_vat` (with country)\n\nValidate a national (unprefixed) VAT number for a country.\n\n## Usage\n\n```sql\nSELECT conform.is_valid_vat('136695976', 'DE');  -- true\n```\n\n## Notes\n\n- `country` is an ISO-3166 alpha-2 constant; offline validation.",
+        "vgi.example_queries": "[{\"description\": \"Validate a country-prefixed EU VAT number\", \"sql\": \"SELECT conform.main.is_valid_vat('DE136695976')\"}, {\"description\": \"Validate a German VAT number (unprefixed)\", \"sql\": \"SELECT conform.main.is_valid_vat('136695976', 'DE')\"}]",
+        "vgi.keywords": "[\"vat\", \"eu vat\", \"tax id\", \"validate vat\", \"country\", \"national vat\", \"value added tax\"]",
+        "vgi.title": "Is Valid VAT Number For Country"
+      },
+      "BOOLEAN",
+      [
+        "text",
+        "country"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22610,
+      [
+        "SELECT conform.main.is_valid_vat('136695976', 'DE')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "vat"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "mask_card",
+      null,
+      "scalar",
+      "Mask all but the last four digits, e.g. '************1234' (NULL if <4 digits)",
+      null,
+      {
+        "vgi.category": "card",
+        "vgi.doc_llm": "## `mask_card(text)`\n\nReturns `VARCHAR`: the card number with every digit except the **last four** replaced by `*` (e.g. `'************1111'`), or `NULL` when the input has fewer than four digits or is `NULL`.\n\nUse it to safely display or log PANs without exposing the full number (PCI-friendly redaction). Separators are stripped before masking, so the output is a contiguous masked string.",
+        "vgi.doc_md": "# `mask_card`\n\nRedact a card number, keeping only the last four digits.\n\n## Usage\n\n```sql\nSELECT conform.mask_card('4111-1111-1111-1111');  -- '************1111'\n```\n\n## Notes\n\n- Keeps the last 4 digits; `NULL` if fewer than 4 digits.\n- Separators are stripped before masking.",
+        "vgi.example_queries": "[{\"description\": \"Mask a card number\", \"sql\": \"SELECT conform.main.mask_card('4111-1111-1111-1111')\"}]",
+        "vgi.executable_examples": "[{\"description\": \"Mask all but the last four digits of a card number.\", \"sql\": \"SELECT conform.main.mask_card('4111-1111-1111-1111')\"}, {\"description\": \"Detect a card's brand from its prefix and length.\", \"sql\": \"SELECT conform.main.card_brand('4111111111111111')\"}, {\"description\": \"Validate a card number against the Luhn checksum.\", \"sql\": \"SELECT conform.main.is_valid_card('4111 1111 1111 1111')\"}, {\"description\": \"Normalize an email address (lower-cased domain).\", \"sql\": \"SELECT conform.main.normalize_email('Test@Example.COM')\"}, {\"description\": \"Format a US phone number as canonical E.164.\", \"sql\": \"SELECT conform.main.format_phone_e164('202-456-1111')\"}]",
+        "vgi.keywords": "[\"credit card\", \"mask card\", \"redact\", \"pan\", \"last four\", \"pci\", \"payment\", \"privacy\"]",
+        "vgi.title": "Mask Card Number"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22611,
+      [
+        "SELECT conform.main.mask_card('4111-1111-1111-1111')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "card"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "normalize_email",
+      null,
+      "scalar",
+      "Normalized email address (lower-cased domain, etc.), or NULL if invalid",
+      null,
+      {
+        "vgi.category": "email",
+        "vgi.doc_llm": "## `normalize_email(text)`\n\nReturns `VARCHAR`: a **canonical** form of the email address (the domain lower-cased and IDNA-normalized; the local-part case left intact per the email standard), or `NULL` when `text` is invalid or `NULL`.\n\nValidation is offline (no DNS). Use this before grouping, joining, or deduplicating on email so that `Test@Example.COM` and `test@example.com` collapse to the same key. Combine with `is_valid_email` if you also need a validity flag.",
+        "vgi.doc_md": "# `normalize_email`\n\nCanonicalize an email address for comparison / deduplication.\n\n## Usage\n\n```sql\nSELECT conform.normalize_email('Test@Example.COM');  -- 'Test@example.com'\n```\n\n## Notes\n\n- Lower-cases the domain; leaves the local-part case unchanged.\n- Returns `NULL` for invalid or `NULL` input.",
+        "vgi.example_queries": "[{\"description\": \"Normalize an email address\", \"sql\": \"SELECT conform.main.normalize_email('Test@Example.COM')\"}]",
+        "vgi.keywords": "[\"email\", \"normalize email\", \"canonical email\", \"lowercase domain\", \"dedupe email\"]",
+        "vgi.title": "Normalize Email Address"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22612,
+      [
+        "SELECT conform.main.normalize_email('Test@Example.COM')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "email"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "normalize_url",
+      null,
+      "scalar",
+      "Lower-case scheme + host and strip a default port, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "url",
+        "vgi.doc_llm": "## `normalize_url(text)`\n\nReturns `VARCHAR`: a canonicalized URL -- scheme and host lower-cased and a default port (`:80` for http, `:443` for https) stripped -- or `NULL` when the URL is invalid or `NULL`.\n\nNormalize before comparing, grouping, or deduplicating URLs so trivial variants (`HTTP://Example.com:80/Path` vs `http://example.com/Path`) collapse. Path/query case is preserved. Offline.",
+        "vgi.doc_md": "# `normalize_url`\n\nCanonicalize a URL for comparison / deduplication.\n\n## Usage\n\n```sql\nSELECT conform.normalize_url('HTTP://Example.com:80/Path');\n-- 'http://example.com/Path'\n```\n\n## Notes\n\n- Lower-cases scheme+host, strips default port; keeps path/query case.",
+        "vgi.example_queries": "[{\"description\": \"Normalize a URL\", \"sql\": \"SELECT conform.main.normalize_url('HTTP://Example.com:80/Path')\"}]",
+        "vgi.keywords": "[\"url\", \"uri\", \"normalize url\", \"canonical url\", \"dedupe url\", \"lowercase host\", \"web address\"]",
+        "vgi.title": "Normalize Web URL"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22613,
+      [
+        "SELECT conform.main.normalize_url('HTTP://Example.com:80/Path')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "url"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "phone_region",
+      null,
+      "scalar",
+      "The ISO region a phone number belongs to, parsing in a given region (NULL if invalid)",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `phone_region(text, region)`\n\nReturns `VARCHAR`: the ISO-3166 alpha-2 region a phone number belongs to, parsing `text` with the explicit `region` (so national-format numbers resolve correctly), or `NULL` when invalid or `NULL`.\n\nUse this overload when input is in national format for a known non-US country. `region` is a constant.",
+        "vgi.doc_md": "# `phone_region` (with region)\n\nDetermine a number's region, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.phone_region('07911 123456', 'GB');  -- 'GB'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant used for parsing.",
+        "vgi.example_queries": "[{\"description\": \"Region a number belongs to\", \"sql\": \"SELECT conform.main.phone_region('+447911123456')\"}, {\"description\": \"Region a UK number belongs to\", \"sql\": \"SELECT conform.main.phone_region('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"region\", \"country\", \"parse region\", \"phone region\", \"iso country\"]",
+        "vgi.title": "Phone Number Region Code By Parse Region"
+      },
+      "VARCHAR",
+      [
+        "text",
+        "region"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22614,
+      [
+        "SELECT conform.main.phone_region('07911 123456', 'GB')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "phone_region",
+      null,
+      "scalar",
+      "The ISO region a phone number belongs to (parse region defaults to 'US')",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `phone_region(text, region)`\n\nReturns `VARCHAR`: the ISO-3166 alpha-2 region a phone number belongs to, parsing `text` with the explicit `region` (so national-format numbers resolve correctly), or `NULL` when invalid or `NULL`.\n\nUse this overload when input is in national format for a known non-US country. `region` is a constant.",
+        "vgi.doc_md": "# `phone_region` (with region)\n\nDetermine a number's region, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.phone_region('07911 123456', 'GB');  -- 'GB'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant used for parsing.",
+        "vgi.example_queries": "[{\"description\": \"Region a number belongs to\", \"sql\": \"SELECT conform.main.phone_region('+447911123456')\"}, {\"description\": \"Region a UK number belongs to\", \"sql\": \"SELECT conform.main.phone_region('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"region\", \"country\", \"parse region\", \"phone region\", \"iso country\"]",
+        "vgi.title": "Phone Number Region Code By Parse Region"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22614,
+      [
+        "SELECT conform.main.phone_region('+447911123456')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "phone_type",
+      null,
+      "scalar",
+      "Line type of a phone number, e.g. 'mobile'/'fixed_line' (parse region 'US')",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `phone_type(text, region)`\n\nReturns `VARCHAR`: the **line type** of a phone number (`'mobile'`, `'fixed_line'`, ...), parsing `text` with the explicit `region`, or `NULL` when invalid or `NULL`.\n\nUse this overload for national-format non-US numbers. `region` is a constant.",
+        "vgi.doc_md": "# `phone_type` (with region)\n\nClassify a number's line type, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.phone_type('07911 123456', 'GB');  -- 'mobile'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant used for parsing.",
+        "vgi.example_queries": "[{\"description\": \"Line type of a US number\", \"sql\": \"SELECT conform.main.phone_type('202-456-1111')\"}, {\"description\": \"Line type of a UK number\", \"sql\": \"SELECT conform.main.phone_type('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"line type\", \"mobile\", \"fixed line\", \"region\", \"country\", \"phone type\"]",
+        "vgi.title": "Phone Number Line Type By Region"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22615,
+      [
+        "SELECT conform.main.phone_type('202-456-1111')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "phone_type",
+      null,
+      "scalar",
+      "Line type of a phone number, parsing in a given region (NULL if invalid)",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `phone_type(text, region)`\n\nReturns `VARCHAR`: the **line type** of a phone number (`'mobile'`, `'fixed_line'`, ...), parsing `text` with the explicit `region`, or `NULL` when invalid or `NULL`.\n\nUse this overload for national-format non-US numbers. `region` is a constant.",
+        "vgi.doc_md": "# `phone_type` (with region)\n\nClassify a number's line type, parsing in an explicit region.\n\n## Usage\n\n```sql\nSELECT conform.phone_type('07911 123456', 'GB');  -- 'mobile'\n```\n\n## Notes\n\n- `region` is an ISO-3166 alpha-2 constant used for parsing.",
+        "vgi.example_queries": "[{\"description\": \"Line type of a US number\", \"sql\": \"SELECT conform.main.phone_type('202-456-1111')\"}, {\"description\": \"Line type of a UK number\", \"sql\": \"SELECT conform.main.phone_type('07911 123456', 'GB')\"}]",
+        "vgi.keywords": "[\"phone\", \"line type\", \"mobile\", \"fixed line\", \"region\", \"country\", \"phone type\"]",
+        "vgi.title": "Phone Number Line Type By Region"
+      },
+      "VARCHAR",
+      [
+        "text",
+        "region"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22615,
+      [
+        "SELECT conform.main.phone_type('07911 123456', 'GB')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "supported_phone_regions",
+      null,
+      "table",
+      "Every (region, country_code) the phone functions support",
+      null,
+      {
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `supported_phone_regions()`\n\nA **table function** (no arguments) returning one row per phone region the phone scalars understand, with columns:\n\n- `region` (`VARCHAR`) -- the ISO-3166 alpha-2 code you pass as the optional `region` argument to `is_valid_phone(text, region)`, the phone formatters, `phone_region`, and `phone_type`.\n- `country_code` (`INTEGER`) -- its international dialling (country calling) code.\n\nUse it to discover valid region values or to look up a country's dialling code (filter by `region` to read one country's `country_code`).",
+        "vgi.doc_md": "# `supported_phone_regions`\n\nDiscovery table of every phone region the worker understands.\n\n## Columns\n\n- `region` (`VARCHAR`) -- ISO-3166 alpha-2 region code.\n- `country_code` (`INTEGER`) -- international dialling code.",
+        "vgi.example_queries": "[{\"description\": \"How many phone regions are supported\", \"sql\": \"SELECT count(*) AS regions FROM conform.main.supported_phone_regions()\"}, {\"description\": \"Dialling code for the UK\", \"sql\": \"SELECT country_code FROM conform.main.supported_phone_regions() WHERE region = 'GB'\"}]",
+        "vgi.keywords": "[\"phone\", \"regions\", \"supported regions\", \"country code\", \"dialling code\", \"discovery\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"region\", \"type\": \"VARCHAR\", \"description\": \"ISO-3166 alpha-2 region code (the optional `region` argument to the phone functions).\"}, {\"name\": \"country_code\", \"type\": \"INTEGER\", \"description\": \"International dialling (country calling) code.\"}]",
+        "vgi.title": "List Supported Phone Regions"
+      },
+      null,
+      [],
+      [],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22618,
+      [
+        "SELECT count(*) AS regions FROM conform.main.supported_phone_regions()",
+        "SELECT country_code FROM conform.main.supported_phone_regions() WHERE region = 'GB'"
+      ],
+      null,
+      [
+        "conform",
+        "phone"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "supported_postal_countries",
+      null,
+      "table",
+      "The countries is_valid_postal_code() understands (US, CA, GB, DE, ...)",
+      null,
+      {
+        "vgi.category": "postal",
+        "vgi.doc_llm": "## `supported_postal_countries()`\n\nA **table function** (no arguments) returning one row per country whose postal-code format `is_valid_postal_code(text, country)` can check, with a single column:\n\n- `country` (`VARCHAR`) -- an ISO-3166 alpha-2 code such as `US`, `CA`, `GB`, `DE`, `FR`, `NL`, `AU`, `JP`, `IN`, `BR`.\n\nCoverage is intentionally modest. Because `is_valid_postal_code` **raises** on an unsupported country (so a typo is not mistaken for an invalid code), read this table first -- or join against it -- to confirm a country is supported before calling the scalar.",
+        "vgi.doc_md": "# `supported_postal_countries`\n\nDiscovery table of every country `is_valid_postal_code()` can format-check.\n\n## Columns\n\n- `country` (`VARCHAR`) -- ISO-3166 alpha-2 code, e.g. `US`, `CA`, `GB`.",
+        "vgi.example_queries": "[{\"description\": \"Count the supported postal-code countries\", \"sql\": \"SELECT count(*) AS countries FROM conform.main.supported_postal_countries()\"}, {\"description\": \"Check whether US postal codes are supported before validating\", \"sql\": \"SELECT count(*) > 0 AS supported FROM conform.main.supported_postal_countries() WHERE country = 'US'\"}]",
+        "vgi.keywords": "[\"postal code\", \"zip code\", \"postcode\", \"countries\", \"supported countries\", \"country\", \"discovery\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"country\", \"type\": \"VARCHAR\", \"description\": \"An ISO-3166 alpha-2 country code accepted as the `country` argument to `is_valid_postal_code`.\"}]",
+        "vgi.title": "List Supported Postal Countries"
+      },
+      null,
+      [],
+      [],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22619,
+      [
+        "SELECT count(*) AS countries FROM conform.main.supported_postal_countries()",
+        "SELECT count(*) > 0 AS supported FROM conform.main.supported_postal_countries() WHERE country = 'US'"
+      ],
+      null,
+      [
+        "conform",
+        "postal"
+      ]
+    ],
+    [
+      "conform",
+      "22592",
+      "main",
+      "url_host",
+      null,
+      "scalar",
+      "Lower-cased host of a valid URL, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "url",
+        "vgi.doc_llm": "## `url_host(text)`\n\nReturns `VARCHAR`: the lower-cased **host** (domain) of a valid URL (e.g. `'www.example.com'`), or `NULL` when the URL is invalid or `NULL`.\n\nUse it to group or filter by site/domain, build allow/deny lists, or join URL data on host. The port and userinfo are excluded; only the host is returned. Offline.",
+        "vgi.doc_md": "# `url_host`\n\nExtract the (lower-cased) host from a URL.\n\n## Usage\n\n```sql\nSELECT conform.url_host('https://WWW.Example.com/a');  -- 'www.example.com'\n```\n\n## Notes\n\n- Host only (no port/userinfo); `NULL` for invalid URLs.",
+        "vgi.example_queries": "[{\"description\": \"Extract the URL host\", \"sql\": \"SELECT conform.main.url_host('https://WWW.Example.com/a')\"}]",
+        "vgi.keywords": "[\"url\", \"uri\", \"host\", \"domain\", \"url host\", \"hostname\", \"web address\", \"group by domain\"]",
+        "vgi.title": "Extract URL Host"
+      },
+      "VARCHAR",
+      [
+        "text"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22616,
+      [
+        "SELECT conform.main.url_host('https://WWW.Example.com/a')"
+      ],
+      "CONSISTENT",
+      [
+        "conform",
+        "url"
+      ]
+    ]
+  ]
+}

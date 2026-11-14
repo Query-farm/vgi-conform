@@ -1,0 +1,447 @@
+{
+  "schema_version": 1,
+  "catalogs": {
+    "released": {
+      "path": "coverage/catalog-released.json",
+      "sha256": "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "catalog_sha256": "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+        "notes": "Complete native function/table/view exports through actual Haybarn attachments reconcile 24 logical names: 21 scalar names and three discovery table names, overloads merged, no exclusions. Current main adds composed examples and corrects metadata wording; validators.py and selected scalar computations are unchanged from v0.4.0. Current catalog uses the existing installed source environment without rebuild. Notebook executes the public release in an isolated uvx environment; tested dependency versions are recorded in README."
+      }
+    },
+    "current": {
+      "path": "coverage/catalog-current.json",
+      "sha256": "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "catalog_sha256": "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e",
+        "notes": "Complete native function/table/view exports through actual Haybarn attachments reconcile 24 logical names: 21 scalar names and three discovery table names, overloads merged, no exclusions. Current main adds composed examples and corrects metadata wording; validators.py and selected scalar computations are unchanged from v0.4.0. Current catalog uses the existing installed source environment without rebuild. Notebook executes the public release in an isolated uvx environment; tested dependency versions are recorded in README."
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "path": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+      "execution": {
+        "path": "coverage/run-01.json",
+        "sha256": "314b7b696b20aa8836eb153b8d315ad1a63d6ece1f09a9a97ab2a73aed5fc3d3"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "object": {
+        "schema": "main",
+        "name": "supported_phone_regions"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "e6d0867f",
+          "reference": "conform.main.supported_phone_regions"
+        }
+      ],
+      "narrative_cells": [
+        "4b2b43da"
+      ],
+      "result_cells": [
+        "e6d0867f"
+      ],
+      "interpretation_cells": [
+        "379891d8"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Check worker support before selecting constant-argument phone parsing branches.",
+        "finding": "The returned US/GB contexts are materialized and used in the input guard. Every row must have a supplied, supported and implemented context; no unknown context silently falls back to a default."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "is_valid_email"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "313051e7",
+          "reference": "conform.main.is_valid_email"
+        }
+      ],
+      "narrative_cells": [
+        "379891d8"
+      ],
+      "result_cells": [
+        "dfac317f"
+      ],
+      "interpretation_cells": [
+        "253724f6"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Preserve syntactically invalid, empty and missing email fields while reporting the full import population.",
+        "finding": "All twelve rows remain in the report. The email bar separates nine valid, two invalid and one missing value; validity is an offline syntax result, not deliverability or ownership."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "normalize_email"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "313051e7",
+          "reference": "conform.main.normalize_email"
+        }
+      ],
+      "narrative_cells": [
+        "87cae067"
+      ],
+      "result_cells": [
+        "f83e69b2"
+      ],
+      "interpretation_cells": [
+        "domain-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Identify repeated normalized representations without merging different local parts or people.",
+        "finding": "Domain-case variants of Ann and Bea collapse, while differently cased local parts remain distinct. Raw variants and record IDs are retained. Normalization is checked for idempotence and does not replace invalid or missing fields."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "email_domain"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "313051e7",
+          "reference": "conform.main.email_domain"
+        }
+      ],
+      "narrative_cells": [
+        "domain-question"
+      ],
+      "result_cells": [
+        "domain-finding"
+      ],
+      "interpretation_cells": [
+        "domain-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Compare domain-level grouping with complete normalized email values.",
+        "finding": "The example.com group contains four valid email rows and three complete normalized addresses; the Unicode domain group retains two local-part-case variants. Shared domain is a coarser inventory key, not identity or organizational ownership."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "is_valid_url"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "313051e7",
+          "reference": "conform.main.is_valid_url"
+        }
+      ],
+      "narrative_cells": [
+        "8cfd5bf2"
+      ],
+      "result_cells": [
+        "dfac317f"
+      ],
+      "interpretation_cells": [
+        "8cfd5bf2"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Make the released parser verdict visible alongside missing and malformed URL states.",
+        "finding": "Seven URL fields pass, three are rejected and two are missing. The root-path absolute URL in record 06 is retained and explicitly labeled as a released-parser limitation; the verdict is not presented as a universal URL-validity rule."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "normalize_url"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "313051e7",
+          "reference": "conform.main.normalize_url"
+        }
+      ],
+      "narrative_cells": [
+        "87cae067"
+      ],
+      "result_cells": [
+        "f83e69b2"
+      ],
+      "interpretation_cells": [
+        "domain-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Separate scheme/host/default-port normalization from path and query identity.",
+        "finding": "Repeated normalized URLs retain their raw variants; path case and query order remain distinct. The host grouping shows why dropping those details would merge more values than normalization does."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "url_host"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "313051e7",
+          "reference": "conform.main.url_host"
+        }
+      ],
+      "narrative_cells": [
+        "domain-question"
+      ],
+      "result_cells": [
+        "domain-finding"
+      ],
+      "interpretation_cells": [
+        "domain-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Show the information lost when full normalized URLs are reduced to a host.",
+        "finding": "The example.org host group has four valid rows and three distinct complete normalized URLs. Record IDs remain visible, while invalid and missing values stay in the earlier quality report rather than being assigned a guessed host."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "is_valid_phone"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "313051e7",
+          "reference": "conform.main.is_valid_phone"
+        }
+      ],
+      "narrative_cells": [
+        "2604dc3c"
+      ],
+      "result_cells": [
+        "acfcbe83"
+      ],
+      "interpretation_cells": [
+        "acfcbe83"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Measure the effect of parsing context on the same national and international raw strings.",
+        "finding": "Eight phone fields pass under row-country context versus six under the US assumption. Two national GB strings change status; explicit international forms agree. Missing and empty remain separate, and no number is called."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "format_phone_e164"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "313051e7",
+          "reference": "conform.main.format_phone_e164"
+        }
+      ],
+      "narrative_cells": [
+        "379891d8"
+      ],
+      "result_cells": [
+        "display-query"
+      ],
+      "interpretation_cells": [
+        "display-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Retain canonical calling-code-qualified values while choosing display formats.",
+        "finding": "Valid variants collapse to retained E.164 strings; unusable values do not acquire a plausible replacement. International display round trips to the same E.164 value, and international source strings are invariant across the tested contexts."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "phone_region"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "313051e7",
+          "reference": "conform.main.phone_region"
+        }
+      ],
+      "narrative_cells": [
+        "607e6de1"
+      ],
+      "result_cells": [
+        "63884b5c"
+      ],
+      "interpretation_cells": [
+        "display-question"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Keep returned number region distinct from supplied parsing context.",
+        "finding": "Record 06 has supplied US context but an explicit German calling code and returned DE region. The mismatch remains visible and is not treated as evidence of invalidity or residence."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "format_phone_national"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "display-query",
+          "reference": "conform.main.format_phone_national"
+        }
+      ],
+      "narrative_cells": [
+        "display-question"
+      ],
+      "result_cells": [
+        "display-query"
+      ],
+      "interpretation_cells": [
+        "display-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Demonstrate what a national display omits from canonical international identity.",
+        "finding": "The German value becomes a domestic 030 display and UK values use domestic leading-zero forms. E.164 and returned region remain alongside them because a national string alone loses calling-code context."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "format_phone_international"
+      },
+      "notebook": "01_normalized_fields_are_not_verified_contacts.ipynb",
+      "sql": [
+        {
+          "cell": "display-query",
+          "reference": "conform.main.format_phone_international"
+        }
+      ],
+      "narrative_cells": [
+        "display-question"
+      ],
+      "result_cells": [
+        "display-query"
+      ],
+      "interpretation_cells": [
+        "display-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:47:12.938448+00:00",
+        "notebook_sha256": "5c1c6861fb671d8c530bc3ed0f62ed1a366179528a109df8431e40503e391f7d",
+        "catalog_sha256": [
+          "444abd8cfcc9b94969d2ee242a947c42529178444fd3490be04b171273e113fa",
+          "06ad37fafa488e5326b79ff7ab00ed872846e523dc5ab333b0247e17c9606b5e"
+        ],
+        "purpose": "Produce a readable international display without losing the retained canonical value.",
+        "finding": "The display keeps the +1/+44/+49 calling codes while adding spacing. Every displayed value parses back to its E.164 source in the invariant query; this is formatting fidelity, not reachability verification."
+      }
+    }
+  ]
+}

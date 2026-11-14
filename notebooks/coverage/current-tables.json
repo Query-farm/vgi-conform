@@ -1,0 +1,101 @@
+{
+  "query": "SELECT * FROM duckdb_tables() WHERE database_name='conform' ORDER BY schema_name,table_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "schema_oid",
+    "table_name",
+    "table_oid",
+    "comment",
+    "tags",
+    "internal",
+    "temporary",
+    "has_primary_key",
+    "estimated_size",
+    "column_count",
+    "index_count",
+    "check_constraint_count",
+    "sql"
+  ],
+  "rows": [
+    [
+      "conform",
+      22592,
+      "main",
+      22593,
+      "card_brands",
+      22752,
+      "The brands card_brand() can return, one per row (discovery table).",
+      {
+        "domain": "data-quality",
+        "vgi.category": "card",
+        "vgi.doc_llm": "## `card_brands` (table)\n\nOne row per card brand the `card_brand` scalar can emit. Single column:\n\n- `brand` (`VARCHAR`, primary key) -- a brand name such as `visa`, `mastercard`, `amex`, `discover`, `diners`, `jcb`.\n\nRead this table directly to enumerate the recognized brands -- e.g. to populate a UI filter or to validate that a `card_brand(...)` result is within the known set. Backed by the identically-named table function.",
+        "vgi.doc_md": "# `card_brands`\n\nDiscovery table of every brand `card_brand()` can return, exposed as a regular table you can read without parentheses.\n\n## Columns\n\n- `brand` (`VARCHAR`, primary key) -- e.g. `visa`, `mastercard`, `amex`, `discover`, `diners`, `jcb`.\n\nRead it directly to enumerate the recognized brands; see the table's example queries for ready-to-run SQL.",
+        "vgi.example_queries": "[{\"description\": \"For every recognized card brand, count the payment card numbers of that brand and how many pass the Luhn check; brands with no cards show zero and unrecognized numbers are left out.\", \"sql\": \"WITH payments(pan) AS (VALUES ('4111 1111 1111 1111'), ('4111 1111 1111 1112'), ('5555 5555 5555 4444'), ('3782 822463 10005'), ('6011111111111117'), ('9999 0000')) SELECT b.brand, count(p.pan) AS cards, count(p.pan) FILTER (WHERE conform.main.is_valid_card(p.pan)) AS luhn_valid FROM conform.main.card_brands AS b LEFT JOIN payments AS p ON conform.main.card_brand(p.pan) = b.brand GROUP BY b.brand ORDER BY b.brand\"}, {\"description\": \"Check whether 'visa' is among the recognized card brands.\", \"sql\": \"SELECT count(*) > 0 AS has_visa FROM conform.main.card_brands WHERE brand = 'visa'\"}, {\"description\": \"Count how many card brands the worker recognizes.\", \"sql\": \"SELECT count(*) AS brand_count FROM conform.main.card_brands\"}]",
+        "vgi.keywords": "[\"credit card\", \"card brands\", \"visa\", \"mastercard\", \"amex\", \"discover\", \"jcb\", \"discovery\"]",
+        "vgi.title": "Recognized Card Brands Table"
+      },
+      false,
+      false,
+      true,
+      0,
+      1,
+      1,
+      0,
+      "CREATE TABLE card_brands(brand VARCHAR, PRIMARY KEY(brand));"
+    ],
+    [
+      "conform",
+      22592,
+      "main",
+      22593,
+      "supported_phone_regions",
+      22750,
+      "Every (region, country_code) the phone functions understand (discovery table).",
+      {
+        "domain": "data-quality",
+        "vgi.category": "phone",
+        "vgi.doc_llm": "## `supported_phone_regions` (table)\n\nOne row per phone region the conform phone functions understand. Columns:\n\n- `region` (`VARCHAR`, primary key) -- the ISO-3166 alpha-2 code you pass as the optional `region` argument to `is_valid_phone(text, region)`, the phone formatters, `phone_region`, and `phone_type`.\n- `country_code` (`INTEGER`) -- its international dialling (country calling) code.\n\nRead this table directly to discover valid region values or to look up a country's dialling code. Backed by the identically-named table function, so the rows are identical.",
+        "vgi.doc_md": "# `supported_phone_regions`\n\nDiscovery table of every phone region the worker understands, exposed as a regular table you can read without parentheses.\n\n## Columns\n\n- `region` (`VARCHAR`, primary key) -- ISO-3166 alpha-2 region code (the optional `region` argument to the phone functions).\n- `country_code` (`INTEGER`) -- international dialling (country calling) code.\n\nRead it directly to discover valid region values or look up a dialling code; see the table's example queries for ready-to-run SQL.",
+        "vgi.example_queries": "[{\"description\": \"Count the supported regions and the distinct dialling codes among them.\", \"sql\": \"SELECT count(*) AS regions, count(DISTINCT country_code) AS dialling_codes FROM conform.main.supported_phone_regions\"}, {\"description\": \"Look up the UK's international dialling code.\", \"sql\": \"SELECT country_code FROM conform.main.supported_phone_regions WHERE region = 'GB'\"}]",
+        "vgi.keywords": "[\"phone\", \"regions\", \"supported regions\", \"country code\", \"dialling code\", \"discovery\"]",
+        "vgi.title": "Supported Phone Regions Table"
+      },
+      false,
+      false,
+      true,
+      0,
+      2,
+      1,
+      0,
+      "CREATE TABLE supported_phone_regions(region VARCHAR, country_code INTEGER NOT NULL, PRIMARY KEY(region));"
+    ],
+    [
+      "conform",
+      22592,
+      "main",
+      22593,
+      "supported_postal_countries",
+      22751,
+      "Every country is_valid_postal_code() understands, one per row (discovery table).",
+      {
+        "domain": "data-quality",
+        "vgi.category": "postal",
+        "vgi.doc_llm": "## `supported_postal_countries` (table)\n\nOne row per country whose postal-code format `is_valid_postal_code(text, country)` can check. Single column:\n\n- `country` (`VARCHAR`, primary key) -- the ISO-3166 alpha-2 code you pass as the `country` argument to `is_valid_postal_code` (e.g. `US`, `CA`, `GB`, `DE`).\n\nCoverage is intentionally modest. Because `is_valid_postal_code` **raises** on an unsupported country, read (or join against) this table to confirm a country is supported before validating. Backed by the identically-named table function.",
+        "vgi.doc_md": "# `supported_postal_countries`\n\nDiscovery table of every country `is_valid_postal_code()` can format-check, exposed as a regular table you can read without parentheses.\n\n## Columns\n\n- `country` (`VARCHAR`, primary key) -- ISO-3166 alpha-2 code, e.g. `US`, `CA`, `GB`.\n\nRead it directly to discover the supported countries before calling `is_valid_postal_code(text, country)`.",
+        "vgi.example_queries": "[{\"description\": \"List every supported postal-code country in order.\", \"sql\": \"SELECT country FROM conform.main.supported_postal_countries ORDER BY country\"}, {\"description\": \"Confirm US postal codes are supported before validating.\", \"sql\": \"SELECT count(*) > 0 AS supported FROM conform.main.supported_postal_countries WHERE country = 'US'\"}]",
+        "vgi.keywords": "[\"postal code\", \"zip code\", \"postcode\", \"countries\", \"supported countries\", \"country\", \"discovery\"]",
+        "vgi.title": "Supported Postal Countries Table"
+      },
+      false,
+      false,
+      true,
+      0,
+      1,
+      1,
+      0,
+      "CREATE TABLE supported_postal_countries(country VARCHAR, PRIMARY KEY(country));"
+    ]
+  ]
+}
