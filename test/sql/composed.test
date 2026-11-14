@@ -1,0 +1,53 @@
+# name: test/sql/composed.test
+# description: Composed example queries (vgi_conform/examples.py) -- several conform objects in one query
+# group: [vgi_conform]
+
+require-env VGI_CONFORM_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'conform' AS conform (TYPE vgi, LOCATION '{VGI_CONFORM_WORKER}');
+
+# Sign-ups per domain: invalid dropped; domain-case variants collapse (local-part case kept).
+query TII
+WITH signups(email) AS (VALUES ('Ann@Example.COM'), ('Ann@example.com'), ('bob@Mail.Example.org'), ('carol@example.com'), ('not-an-email')) SELECT conform.main.email_domain(email) AS domain, count(*) AS signup_rows, count(DISTINCT conform.main.normalize_email(email)) AS unique_addresses FROM signups WHERE conform.main.is_valid_email(email) GROUP BY domain ORDER BY domain;
+----
+example.com	3	2
+mail.example.org	1	1
+
+# Contacts whose valid phone belongs to another country than the record says.
+query TTTTT
+WITH contacts(name, country, phone) AS (VALUES ('Ada', 'GB', '+44 7400 123456'), ('Bea', 'US', '+49 30 901820'), ('Cal', 'FR', '+33 6 12 34 56 78'), ('Dov', 'US', '(202) 456-1111'), ('Eli', 'US', '12345')) SELECT name, country, conform.main.phone_region(phone) AS phone_region, conform.main.format_phone_e164(phone) AS e164, conform.main.phone_type(phone) AS line_type FROM contacts WHERE conform.main.is_valid_phone(phone) AND conform.main.phone_region(phone) <> country ORDER BY name;
+----
+Bea	US	DE	+4930901820	fixed_line
+
+# Supplier audit: IBAN validity/format/country vs normalized VAT country.
+query TTTTTT
+WITH suppliers(name, iban, vat) AS (VALUES ('Alpen GmbH', 'DE89 3704 0044 0532 0130 00', 'DE 136 695 976'), ('Thames Ltd', 'GB82WEST12345698765432', 'DE136695976'), ('Seine SA', 'FR1420041010050500013M02606', 'FR40303265045'), ('Typo BV', 'NL00ABNA0417164300', 'NL004495445B01')) SELECT name, conform.main.is_valid_iban(iban) AS iban_ok, conform.main.format_iban(iban) AS iban, conform.main.iban_country(iban) AS iban_country, conform.main.format_vat(vat) AS vat, conform.main.iban_country(iban) = left(conform.main.format_vat(vat), 2) AS countries_match FROM suppliers ORDER BY name;
+----
+Alpen GmbH	true	DE89 3704 0044 0532 0130 00	DE	DE136695976	true
+Seine SA	true	FR14 2004 1010 0505 0001 3M02 606	FR	FR40303265045	true
+Thames Ltd	true	GB82 WEST 1234 5698 7654 32	GB	DE136695976	false
+Typo BV	false	NULL	NULL	NL004495445B01	NULL
+
+# Every recognized brand (zero counts kept) with card and Luhn-valid counts.
+query TII
+WITH payments(pan) AS (VALUES ('4111 1111 1111 1111'), ('4111 1111 1111 1112'), ('5555 5555 5555 4444'), ('3782 822463 10005'), ('6011111111111117'), ('9999 0000')) SELECT b.brand, count(p.pan) AS cards, count(p.pan) FILTER (WHERE conform.main.is_valid_card(p.pan)) AS luhn_valid FROM conform.main.card_brands AS b LEFT JOIN payments AS p ON conform.main.card_brand(p.pan) = b.brand GROUP BY b.brand ORDER BY b.brand;
+----
+amex	1	1
+diners	0	0
+discover	1	1
+jcb	0	0
+mastercard	1	1
+visa	2	1
+
+# phone_region: +44 7400 is a GB range (+44 7911 12x is Guernsey, 'GG', in libphonenumber).
+query TT
+SELECT conform.main.phone_region('+447400123456'), conform.main.phone_region('07400 123456', 'GB');
+----
+GB	GB
+
+statement ok
+DETACH conform;

@@ -75,3 +75,16 @@ tasks:
   - name: postal-countries-count
     reference_sql: "SELECT count(*) FROM conform.main.supported_postal_countries()"
     ignore_column_names: true
+  - name: visa-cards-passing-luhn
+    reference_sql: >-
+      SELECT count(*) FROM (VALUES ('4111 1111 1111 1111'), ('4012888888881881'), ('4111111111111112'),
+      ('5555 5555 5555 4444'), ('378282246310005')) AS t(pan)
+      WHERE conform.main.card_brand(pan) = 'visa' AND conform.main.is_valid_card(pan)
+    ignore_column_names: true
+  - name: supplier-iban-vat-country-mismatch
+    reference_sql: >-
+      SELECT name FROM (VALUES ('Acme', 'DE89370400440532013000', 'DE136695976'),
+      ('Brit', 'GB82 WEST 1234 5698 7654 32', 'DE 136 695 976'),
+      ('Polder', 'NL91ABNA0417164300', 'NL004495445B01')) AS s(name, iban, vat)
+      WHERE conform.main.iban_country(iban) <> left(conform.main.format_vat(vat), 2)
+    ignore_column_names: true

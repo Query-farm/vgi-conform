@@ -84,6 +84,13 @@ class TestPhone:
     def test_region_of_number(self) -> None:
         assert v.phone_region("+12024561111") == "US"
 
+    def test_region_gb_vs_guernsey(self) -> None:
+        # The documented phone_region examples use a GB mobile range; +44 7911 12x is
+        # a Guernsey range in libphonenumber, so it resolves to 'GG', not 'GB'.
+        assert v.phone_region("+447400123456") == "GB"
+        assert v.phone_region("07400 123456", "GB") == "GB"
+        assert v.phone_region("+447911123456") == "GG"
+
     def test_supported_regions_nonempty(self) -> None:
         regions = v.supported_phone_regions()
         assert len(regions) > 100

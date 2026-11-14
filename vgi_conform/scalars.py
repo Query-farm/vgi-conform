@@ -40,6 +40,7 @@ from vgi.arguments import ConstParam, Param, Returns
 from vgi.metadata import FunctionExample
 from vgi.scalar_function import ScalarFunction
 
+from . import examples as composed
 from . import validators
 from .meta import function_tags
 
@@ -49,7 +50,7 @@ _SCALARS_PATH = "vgi_conform/scalars.py"
 
 # VGI509: a JSON list of guaranteed-runnable, self-contained, catalog-qualified
 # examples attached to (at least) one object. These exercise only offline scalars
-# (no external service), so the linter can execute them as written against an
+# and discovery tables (no external service), so the linter can execute them as written against an
 # attached worker. ``expected_result`` is intentionally omitted (optional).
 _EXECUTABLE_EXAMPLES_JSON = json.dumps(
     [
@@ -73,6 +74,8 @@ _EXECUTABLE_EXAMPLES_JSON = json.dumps(
             "description": "Format a US phone number as canonical E.164.",
             "sql": "SELECT conform.main.format_phone_e164('202-456-1111')",
         },
+        # Composed, offline + deterministic queries combining several conform objects.
+        *(composed.as_query(ex) for ex in composed.COMPOSED_EXAMPLES),
     ]
 )
 
@@ -188,6 +191,7 @@ class NormalizeEmailFunction(ScalarFunction):
                 sql="SELECT conform.main.normalize_email('Test@Example.COM')",
                 description="Normalize an email address",
             ),
+            composed.EMAIL_DOMAIN_DEDUP,
         ]
 
     @classmethod
@@ -668,7 +672,7 @@ class PhoneRegionFunction(ScalarFunction):
             description_llm=(
                 "## `phone_region(text)`\n\n"
                 "Returns `VARCHAR`: the ISO-3166 alpha-2 **region** a phone number belongs "
-                "to (e.g. `'GB'` for `'+447911123456'`), or `NULL` when invalid or `NULL`. "
+                "to (e.g. `'GB'` for `'+447400123456'`), or `NULL` when invalid or `NULL`. "
                 "The *parse* region defaults to `'US'`, which matters mainly for "
                 "national-format input.\n\n"
                 "Use it to bucket numbers by country or to detect mismatches between a "
@@ -680,7 +684,7 @@ class PhoneRegionFunction(ScalarFunction):
                 "Determine the ISO region a phone number belongs to.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT conform.phone_region('+447911123456');  -- 'GB'\n"
+                "SELECT conform.phone_region('+447400123456');  -- 'GB'\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "- Parse region defaults to `'US'`; pass one for national-format input."
@@ -690,9 +694,10 @@ class PhoneRegionFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.main.phone_region('+447911123456')",
+                sql="SELECT conform.main.phone_region('+447400123456')",
                 description="Region a number belongs to",
             ),
+            composed.PHONE_COUNTRY_MISMATCH,
         ]
 
     @classmethod
@@ -727,7 +732,7 @@ class PhoneRegionRegionFunction(ScalarFunction):
                 "Determine a number's region, parsing in an explicit region.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT conform.phone_region('07911 123456', 'GB');  -- 'GB'\n"
+                "SELECT conform.phone_region('07400 123456', 'GB');  -- 'GB'\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "- `region` is an ISO-3166 alpha-2 constant used for parsing."
@@ -737,7 +742,7 @@ class PhoneRegionRegionFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT conform.main.phone_region('07911 123456', 'GB')",
+                sql="SELECT conform.main.phone_region('07400 123456', 'GB')",
                 description="Region a UK number belongs to",
             ),
         ]
@@ -990,6 +995,7 @@ class IbanCountryFunction(ScalarFunction):
                 sql="SELECT conform.main.iban_country('GB82WEST12345698765432')",
                 description="Country code of an IBAN",
             ),
+            composed.SUPPLIER_IBAN_VAT,
         ]
 
     @classmethod

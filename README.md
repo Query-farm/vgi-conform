@@ -24,7 +24,7 @@ INSTALL vgi FROM community; LOAD vgi;
 ATTACH 'conform' (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-conform@v0.4.0 vgi-conform-worker');
 
 SELECT conform.is_valid_email('a@b.com');                  -- true
-SELECT conform.normalize_email('Test@Example.COM');        -- 'test@example.com'
+SELECT conform.normalize_email('Test@Example.COM');        -- 'Test@example.com'
 SELECT conform.format_phone_e164('202-456-1111');          -- '+12024561111' (region 'US')
 SELECT conform.format_phone_e164('07911 123456', 'GB');    -- '+447911123456'
 SELECT conform.is_valid_iban('GB82 WEST 1234 5698 7654 32');-- true
@@ -214,15 +214,40 @@ lower-cases the scheme and host and strips a default port (`:80` for http,
 ```sql
 SELECT is_valid_postal_code('K1A 0B1', 'CA');   -- true
 SELECT is_valid_postal_code('SW1A 1AA', 'GB');  -- true
-SELECT is_valid_postal_code('1234', 'ZZ');      -- ERROR: unsupported postal-code country 'ZZ'
+SELECT is_valid_postal_code('1234', 'ZZ');      -- ERROR: Argument 'country' has an invalid value (must be one of the allowed choices)
 ```
 
-Because an unknown country raises, use the `supported_postal_countries()`
-discovery table to see (or join against) the supported set before validating:
+Because an unknown country raises (and `country` must be a constant, not a
+column), use the `supported_postal_countries()` discovery table to see the
+supported set before validating:
 
 ```sql
 SELECT * FROM conform.supported_postal_countries() ORDER BY country;
 ```
+
+### Combining functions
+
+The functions are designed to be chained in one query. For example, a card
+report that uses the `card_brands` discovery table as the spine, classifies each
+payment with `card_brand`, and counts Luhn-valid numbers with `is_valid_card` —
+brands with no cards still show up with zero counts:
+
+```sql
+WITH payments(pan) AS (VALUES ('4111 1111 1111 1111'), ('4111 1111 1111 1112'),
+    ('5555 5555 5555 4444'), ('3782 822463 10005'), ('6011111111111117'), ('9999 0000'))
+SELECT b.brand,
+       count(p.pan)                                                    AS cards,
+       count(p.pan) FILTER (WHERE conform.main.is_valid_card(p.pan))   AS luhn_valid
+FROM conform.main.card_brands AS b
+LEFT JOIN payments AS p ON conform.main.card_brand(p.pan) = b.brand
+GROUP BY b.brand
+ORDER BY b.brand;
+-- amex 1 1 · diners 0 0 · discover 1 1 · jcb 0 0 · mastercard 1 1 · visa 2 1
+```
+
+The catalog's example queries include more of these: email sign-ups deduplicated
+per domain, contacts whose phone number belongs to a different country than the
+record says, and a supplier audit cross-checking IBAN country against VAT country.
 
 ## Dependencies & licensing
 

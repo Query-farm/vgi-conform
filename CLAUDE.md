@@ -22,6 +22,7 @@ vgi_conform/
   scalars.py           per-row scalars (arity overloads for region/country)
   tables.py            discovery table functions: supported_phone_regions, card_brands, supported_postal_countries
   schema_utils.py      pa.Field comment / column-doc helper
+  examples.py          composed example SQL (several objects per query); pinned by test/sql/composed.test
 tests/                 pytest: test_validators (pure), test_tables (in-proc), test_scalars (Client RPC)
 test/sql/*.test        haybarn-unittest sqllogictest — authoritative E2E
 Makefile               test / test-unit / test-sql / lint

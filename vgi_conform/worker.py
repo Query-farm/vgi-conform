@@ -13,7 +13,7 @@ Usage:
     ATTACH 'conform' (TYPE vgi, LOCATION 'uv run conform_worker.py');
 
     SELECT conform.is_valid_email('a@b.com');                 -- true
-    SELECT conform.normalize_email('Test@Example.COM');       -- 'test@example.com'
+    SELECT conform.normalize_email('Test@Example.COM');       -- 'Test@example.com'
     SELECT conform.format_phone_e164('202-456-1111');         -- '+12024561111' (region 'US')
     SELECT conform.format_phone_e164('07911 123456', 'GB');   -- '+447911123456'
     SELECT conform.is_valid_iban('GB82 WEST 1234 5698 7654 32');
@@ -34,6 +34,7 @@ from vgi import Worker
 from vgi.catalog import Catalog, ConstraintInfo, Schema, Table, constraint_record
 from vgi.metadata import FunctionExample
 
+from vgi_conform import examples as composed
 from vgi_conform.meta import keywords_json
 from vgi_conform.scalars import SCALAR_FUNCTIONS
 from vgi_conform.tables import (
@@ -211,6 +212,8 @@ _SCHEMA_EXAMPLE_QUERIES = json.dumps(
             "description": "List every recognized payment-card brand.",
             "sql": "SELECT * FROM conform.main.card_brands() ORDER BY brand",
         },
+        # Composed queries: several conform objects combined in one realistic query.
+        *(composed.as_query(ex) for ex in composed.COMPOSED_EXAMPLES),
     ]
 )
 
@@ -443,6 +446,25 @@ _AGENT_TEST_TASKS_JSON = json.dumps(
             "name": "postal-countries-count",
             "prompt": "How many countries does the worker's postal-code validator support?",
         },
+        # --- composed (several conform functions in one query) ---
+        {
+            "name": "visa-cards-passing-luhn",
+            "prompt": (
+                "Of the card numbers '4111 1111 1111 1111', '4012888888881881', '4111111111111112', "
+                "'5555 5555 5555 4444' and '378282246310005', how many are Visa cards that also pass "
+                "the Luhn checksum? Return the count as a single number."
+            ),
+        },
+        {
+            "name": "supplier-iban-vat-country-mismatch",
+            "prompt": (
+                "Three suppliers have these bank and VAT details: 'Acme' (IBAN "
+                "'DE89370400440532013000', VAT 'DE136695976'), 'Brit' (IBAN "
+                "'GB82 WEST 1234 5698 7654 32', VAT 'DE 136 695 976') and 'Polder' (IBAN "
+                "'NL91ABNA0417164300', VAT 'NL004495445B01'). Which supplier's IBAN country differs "
+                "from the country of its VAT number? Return just the supplier name."
+            ),
+        },
     ]
 )
 
@@ -558,6 +580,7 @@ _DISCOVERY_TABLES: list[Table] = [
             "domain": "data-quality",
             "vgi.example_queries": json.dumps(
                 [
+                    composed.as_query(composed.CARD_BRAND_COVERAGE),
                     {
                         "description": "Check whether 'visa' is among the recognized card brands.",
                         "sql": "SELECT count(*) > 0 AS has_visa FROM conform.main.card_brands WHERE brand = 'visa'",
