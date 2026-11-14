@@ -169,7 +169,8 @@ class NormalizeEmailFunction(ScalarFunction):
                 "email standard), or `NULL` when `text` is invalid or `NULL`.\n\n"
                 "Validation is offline (no DNS). Use this before grouping, joining, or "
                 "deduplicating on email so that `Test@Example.COM` and `Test@example.com` "
-                "collapse to the same key (differently-cased local parts stay distinct). Combine with `is_valid_email` if you also need a "
+                "collapse to the same key (differently-cased local parts stay distinct). "
+                "Combine with `is_valid_email` if you also need a "
                 "validity flag."
             ),
             description_md=(
