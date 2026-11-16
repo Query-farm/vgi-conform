@@ -6,7 +6,7 @@
 # See docker-entrypoint.sh. Keyless, stateless, offline: phone/email/IBAN/VAT/card/URL/
 # postal validation + normalization is pure in-process compute. No persistent state volume.
 # syntax=docker/dockerfile:1
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 ARG VERSION=0.0.0
 ARG GIT_COMMIT=unknown
