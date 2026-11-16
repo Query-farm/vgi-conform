@@ -301,7 +301,7 @@ bind→init→process lifecycle in-process; `tests/test_scalars.py` spawns
 `conform_worker.py` over the VGI client/RPC stack exactly as DuckDB would after
 `ATTACH`. The `test/sql/*.test` files are DuckDB sqllogictest cases run by
 [`haybarn-unittest`](https://pypi.org/project/haybarn-unittest/)
-(`uv tool install --prerelease allow 'haybarn-unittest>=2.0.0rc11,<2.1'`) against a real
+(`make test-sql` installs it and runs stdio, launch and http) against a real
 `ATTACH` + `SELECT`. The worker speaks VGI protocol vgi.v3 (3.3), so it needs haybarn 2.0
 and its community `vgi` extension.
 

@@ -117,14 +117,12 @@ make test                     # both
 uv run ruff check . && uv run mypy vgi_conform/
 ```
 
-`make test-sql` sets `VGI_CONFORM_WORKER="uv run --python 3.14
-conform_worker.py"`, puts `~/.local/bin` on PATH, and runs `haybarn-unittest
---keep-home --test-dir . "test/sql/*"`. Install the runner once with
-`uv tool install --prerelease allow 'haybarn-unittest>=2.0.0rc11,<2.1'` (haybarn 2.0 is
-required: the worker is on vgi-python 0.51 / VGI protocol vgi.v3 3.3, which only the
-haybarn 2.0 community `vgi` extension accepts; the runner needs `--keep-home`).
-CI (`.github/workflows/ci.yml`) runs unit +
-lint + a gated `e2e` job that installs haybarn-unittest and runs `make test-sql`.
+`make test-sql` installs the pinned `haybarn-unittest` into `.tools/` and runs
+`ci/run-integration.sh` (adapted from the vgi-starters template) over the stdio,
+launch and http transports (`make test-sql TRANSPORTS=launch` for one), setting
+`VGI_CONFORM_WORKER` per transport (haybarn 2.0 is required: only its community
+`vgi` extension accepts VGI protocol vgi.v3 3.3). CI (`.github/workflows/ci.yml`)
+runs unit + lint + an `integration` job running the same script per transport.
 
 Everything is pure/offline (no network, no DNS, no model downloads), so the suite
 is fast and hermetic.
