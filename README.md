@@ -69,7 +69,7 @@ Change `@v0.4.1` to move to a newer release.
 - **Docker** (the image bundles the worker and its dependencies):
 
   ```sql
-  ATTACH 'conform' AS conform (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-conform:0.4.0');
+  ATTACH 'conform' AS conform (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-conform:0.4.1');
   ```
 
 - **From a local checkout** (`git clone https://github.com/Query-farm/vgi-conform`), point `LOCATION` at `uv run --project /path/to/vgi-conform vgi-conform-worker`.
