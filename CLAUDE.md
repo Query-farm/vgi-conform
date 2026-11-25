@@ -120,7 +120,7 @@ uv run ruff check . && uv run mypy vgi_conform/
 `make test-sql` installs the pinned `haybarn-unittest` into `.tools/` and runs
 `ci/run-integration.sh` (adapted from the vgi-starters template) over the stdio,
 launch and http transports (`make test-sql TRANSPORTS=launch` for one), setting
-`VGI_CONFORM_WORKER` per transport (haybarn 2.0 is required: only its community
+`VGI_CONFORM_WORKER` per transport (haybarn 2.0.1 is required: only its community
 `vgi` extension accepts VGI protocol vgi.v3 3.3). CI (`.github/workflows/ci.yml`)
 runs unit + lint + an `integration` job running the same script per transport.
 
